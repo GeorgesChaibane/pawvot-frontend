@@ -1,0 +1,160 @@
+.metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1.5rem;
+    margin: 3rem 0;
+}
+
+.metric-card {
+    padding: 1.5rem;
+    border-radius: 10px;
+    text-align: center;
+}
+
+.metric-card.primary {
+    background-color: rgba(255, 142, 142, 1);
+}
+
+.metric-card.secondary {
+    background-color: rgba(255, 142, 142, 0.75);
+}
+
+.metric-card h4 {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    font-size: 1.1vw;
+}
+
+.metric-card p {
+    font-size: 1.5vw;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.metric-percentage {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.metric-percentage span {
+    font-size: 0.9vw;
+    font-weight: 600;
+}
+
+.metric-percentage img {
+    width: 1vw;
+    height: 1vw;
+    max-width: 12.5px;
+    max-height: 8px;
+}
+
+.badges-container {
+    display: flex;
+    justify-content: center;
+    gap: 3rem;
+    margin-top: 2rem;
+}
+
+.badge {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease;
+}
+
+.badge:hover {
+    transform: translateY(-3px);
+}
+
+.badge img {
+    width: 2.5vw;
+    height: 2.5vw;
+    max-width: 40px;
+    max-height: 40px;
+}
+
+.badge span {
+    color: var(--primary-color);
+    font-weight: 800;
+    font-size: 1vw;
+}
+
+@media (max-width: 1350px) {
+    .metrics-grid {
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    }
+
+    .metric-card h4 {
+        font-size: 2vw;
+    }
+
+    .metric-card p {
+        font-size: 2.5vw;
+    }
+
+    .metric-percentage span {
+        font-size: 1.5vw;
+    }
+
+    .metric-percentage img {
+        width: 2vw;
+        height: 2vw;
+        max-width: 25px;
+        max-height: 12px;
+    }
+
+    .badge span {
+        font-size: 1.8vw;
+    }
+
+    .badge img {
+        width: 3.5vw;
+        height: 3.5vw;
+    }
+}
+
+@media (max-width: 768px) {
+    .badges-container {
+        flex-direction: column;
+        align-items: center;
+        gap: 1.5rem;
+    }
+
+    .badge {
+        width: 80%;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 576px) {
+    .metric-card h4 {
+        font-size: 3vw;
+    }
+
+    .metric-card p {
+        font-size: 4vw;
+    }
+
+    .metric-percentage span {
+        font-size: 2.5vw;
+    }
+
+    .badge {
+        width: 90%;
+    }
+
+    .badge span {
+        font-size: 2.5vw;
+    }
+
+    .badge img {
+        width: 5vw;
+        height: 5vw;
+    }
+} 

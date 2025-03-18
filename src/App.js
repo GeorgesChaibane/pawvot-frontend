@@ -1,23 +1,37 @@
-import logo from './logo.svg';
-import './App.css';
+import React, { useState } from 'react';
+import Navbar from './components/Navbar';
+import HeroSection from './components/HeroSection';
+import PetSection from './components/PetSection';
+import ProductSection from './components/ProductSection';
+import AdoptionProcess from './components/AdoptionProcess';
+import Metrics from './components/Metrics';
+import Testimonials from './components/Testimonials';
+import Faq from './components/Faq';
+import Footer from './components/Footer';
+import './components/styles/variables.css';
 
 function App() {
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const handleSearch = (query) => {
+    setSearchQuery(query);
+    const adopt = document.getElementById('adopt');
+    if (adopt) {
+      adopt.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+      <Navbar onSearch={handleSearch} />
+      <HeroSection />
+      <Metrics />
+      <PetSection searchQuery={searchQuery} />
+      <ProductSection searchQuery={searchQuery} />
+      <AdoptionProcess />
+      <Testimonials />
+      <Faq />
+      <Footer />
     </div>
   );
 }

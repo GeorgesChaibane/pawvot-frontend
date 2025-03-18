@@ -1,0 +1,162 @@
+.hero {
+    padding: 8rem 0 4rem;
+    overflow-x: hidden;
+}
+
+.hero-container {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    position: relative;
+}
+
+.hero-image {
+    flex: 1;
+    order: 2;
+    margin-left: 5rem;
+    max-width: 50%;
+}
+
+.hero-image img {
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    object-fit: contain;
+}
+
+.hero-content {
+    flex: 1;
+    order: 1;
+    padding-left: 5vw;
+    margin-top: 0;
+    margin-bottom: 2rem;
+}
+
+.hero h1 {
+    font-size: 3.1vw;
+    font-weight: 900;
+    line-height: 1.2;
+    margin-bottom: 1.5rem;
+}
+
+.hero p {
+    font-size: 2.1vw;
+    margin-bottom: 2.5rem;
+    font-weight: 700;
+    padding-top: 0;
+}
+
+.hero-actions {
+    display: flex;
+    gap: 1.5rem;
+}
+
+.action-group {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.primary-btn,
+.secondary-btn {
+    padding: 0.8rem 2rem;
+    border-radius: 10px;
+    color: white;
+    text-decoration: none;
+    font-weight: 800;
+    font-size: 1.3vw;
+    white-space: nowrap;
+    transition: all 0.3s ease;
+    width: 180px;
+    text-align: center;
+}
+
+.primary-btn {
+    background: var(--primary-color);
+}
+
+.primary-btn:hover {
+    background: #ff5252;
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(255, 82, 82, 0.3);
+}
+
+.secondary-btn {
+    background: var(--secondary-color);
+}
+
+.secondary-btn:hover {
+    background: #ff7575;
+    transform: scale(1.05);
+}
+
+@media (max-width: 1350px) {
+    .hero-container {
+        flex-direction: column-reverse;
+        margin-bottom: -90px;
+    }
+
+    .hero-image {
+        display: none;
+    }
+
+    .hero-content {
+        text-align: center;
+        padding-left: 0;
+    }
+
+    .hero-actions {
+        justify-content: center;
+    }
+
+    .hero h1 {
+        padding-bottom: -100px;
+        margin-top: 200px;
+        font-size: 5vw;
+    }
+
+    .hero p {
+        font-size: 3vw;
+    }
+
+    .primary-btn,
+    .secondary-btn {
+        font-size: 2.1vw;
+        width: 160px;
+    }
+}
+
+@media (max-width: 768px) {
+    .hero-actions {
+        flex-direction: column;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .primary-btn,
+    .secondary-btn {
+        width: 200px;
+        font-size: 2.5vw;
+    }
+}
+
+@media (max-width: 576px) {
+    .hero-container {
+        margin-bottom: -15px;
+    }
+
+    .hero h1 {
+        font-size: 5vw;
+        padding-top: 50px;
+    }
+
+    .hero p {
+        font-size: 3vw;
+    }
+
+    .primary-btn,
+    .secondary-btn {
+        width: 180px;
+        font-size: 3vw;
+    }
+} 
