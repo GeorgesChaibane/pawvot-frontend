@@ -1,58 +1,91 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import logoImage from '../assets/images/pawvot-logo-removebg-preview.png';
 import searchIcon from '../assets/images/search-nav.png';
-import './styles/navbar.css';
+import './navbar.css';
 
 const Navbar = ({ onSearch }) => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
+    const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+    useEffect(() => {
+        const handleResize = () => {
+            setIsMobile(window.innerWidth <= 768);
+            if (window.innerWidth > 768) {
+                setIsMenuOpen(false);
+            }
+        };
+
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        onSearch(searchQuery);
+        if (onSearch) onSearch(searchQuery);
     };
 
     const toggleMenu = () => {
         setIsMenuOpen(!isMenuOpen);
     };
 
+    const closeMenu = () => {
+        setIsMenuOpen(false);
+    };
+
     return (
         <header>
             <div className="box-model flex">
-                <a href="/" className="logo">
+                <Link to="/" className="logo">
                     <img src={logoImage} alt="Pawvot Logo" />
-                </a>
+                </Link>
+                
                 <div className="search-container">
                     <form className="search-form" onSubmit={handleSubmit}>
-                        <img src={searchIcon} alt="Search" className="search-icon" />
-                        <input
-                            type="text"
-                            placeholder="Search by breed, product, or city"
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                        />
+                        <div className="input-with-icon">
+                            <img src={searchIcon} alt="Search" className="search-icon" />
+                            <input
+                                placeholder="Search by breed, product, or city"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                            />
+                        </div>
+                        <button type="submit" className="search-button">Search</button>
                     </form>
-                    <button className="search-button" onClick={handleSubmit}>
-                        Search
-                    </button>
                 </div>
-                <nav className={isMenuOpen ? 'active' : ''}>
-                    <ul>
-                        <li><a href="#adopt">Adopt</a></li>
-                        <li><a href="#shop">Shop</a></li>
-                        <li><a href="#about">About</a></li>
-                        <li><a href="#contact">Contact</a></li>
-                    </ul>
-                </nav>
-                <div className="auth-buttons">
-                    <a href="/signup" className="login-signup">Signup</a>
-                    <a href="/login" className="login-signup">Login</a>
-                </div>
-                <button className="burger-menu" onClick={toggleMenu}>
+                
+                <button className="burger-menu" onClick={toggleMenu} aria-label="Toggle menu">
                     <span></span>
                     <span></span>
                     <span></span>
                 </button>
+                
+                <div className={`nav-container ${isMenuOpen ? 'active' : ''}`}>
+                    <nav>
+                        <ul>
+                            <li><Link to="/pets" onClick={closeMenu}>Adopt</Link></li>
+                            <li><Link to="/products" onClick={closeMenu}>Shop</Link></li>
+                            <li><Link to="/bookings" onClick={closeMenu}>Bookings</Link></li>
+                            <li><Link to="/cart" onClick={closeMenu}>Cart</Link></li>
+                            {isMobile && (
+                                <>
+                                    <li><Link to="/signup" onClick={closeMenu}>Signup</Link></li>
+                                    <li><Link to="/login" onClick={closeMenu}>Login</Link></li>
+                                </>
+                            )}
+                        </ul>
+                    </nav>
+                    
+                    {!isMobile && (
+                        <div className="auth-buttons">
+                            <Link to="/signup" className="login-signup">Signup</Link>
+                            <Link to="/login" className="login-signup">Login</Link>
+                        </div>
+                    )}
+                </div>
+                
+                {isMenuOpen && <div className="overlay" onClick={closeMenu}></div>}
             </div>
         </header>
     );

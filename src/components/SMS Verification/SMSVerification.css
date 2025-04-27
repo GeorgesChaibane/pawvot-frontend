@@ -1,0 +1,147 @@
+.sms-verification-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background-color: #f8f9fa;
+  padding: 20px;
+}
+
+.verification-box {
+  background-color: white;
+  border-radius: 10px;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+  padding: 40px;
+  width: 100%;
+  max-width: 500px;
+  text-align: center;
+}
+
+.verification-box h1 {
+  color: #333;
+  margin-bottom: 15px;
+  font-size: 1.8rem;
+}
+
+.verification-info {
+  color: #666;
+  margin-bottom: 30px;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.otp-input-container {
+  display: flex;
+  justify-content: space-between;
+  margin: 30px 0;
+  gap: 10px;
+}
+
+.otp-input {
+  width: 60px;
+  height: 60px;
+  font-size: 1.8rem;
+  font-weight: bold;
+  text-align: center;
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  background-color: #f9f9f9;
+  color: #333;
+  transition: all 0.3s ease;
+}
+
+.otp-input:focus {
+  border-color: #e63946;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(230, 57, 70, 0.2);
+  background-color: white;
+}
+
+.error-message {
+  color: #e63946;
+  background-color: rgba(230, 57, 70, 0.1);
+  padding: 10px;
+  border-radius: 5px;
+  margin-bottom: 20px;
+  font-weight: 500;
+}
+
+.success-message {
+  color: #28a745;
+  background-color: rgba(40, 167, 69, 0.1);
+  padding: 10px;
+  border-radius: 5px;
+  margin-bottom: 20px;
+  font-weight: 500;
+}
+
+.verify-button {
+  background-color: #e63946;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  padding: 14px 0;
+  width: 100%;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  margin-bottom: 20px;
+}
+
+.verify-button:hover {
+  background-color: #d42836;
+}
+
+.verify-button:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+
+.resend-container {
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.timer {
+  color: #e63946;
+  font-weight: bold;
+}
+
+.resend-button {
+  background: none;
+  border: none;
+  color: #e63946;
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: underline;
+  font-size: 0.9rem;
+  padding: 0;
+}
+
+.resend-button:hover {
+  color: #d42836;
+}
+
+.resend-button:disabled {
+  color: #cccccc;
+  cursor: not-allowed;
+  text-decoration: none;
+}
+
+/* Responsive styles */
+@media (max-width: 576px) {
+  .verification-box {
+    padding: 25px 15px;
+  }
+  
+  .otp-input {
+    width: 50px;
+    height: 50px;
+    font-size: 1.5rem;
+  }
+  
+  .verification-box h1 {
+    font-size: 1.5rem;
+  }
+} 

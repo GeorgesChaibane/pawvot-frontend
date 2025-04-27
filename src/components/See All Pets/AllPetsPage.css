@@ -1,0 +1,237 @@
+.all-pets-page {
+  padding: 0 0 60px;
+}
+
+.pets-header {
+  background-color: var(--primary-color);
+  color: white;
+  text-align: center;
+  padding: 60px 20px;
+  margin-bottom: 40px;
+}
+
+.pets-header h1 {
+  font-size: 2.5rem;
+  margin-bottom: 10px;
+}
+
+.pets-header p {
+  font-size: 1.2rem;
+  opacity: 0.9;
+}
+
+.pets-content-container {
+  display: flex;
+  gap: 30px;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.filter-sidebar {
+  width: 280px;
+  flex-shrink: 0;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  padding: 20px;
+  align-self: flex-start;
+  position: sticky;
+  top: 20px;
+}
+
+.filter-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #eee;
+}
+
+.filter-header h2 {
+  font-size: 1.2rem;
+  color: #333;
+  margin: 0;
+}
+
+.clear-filters-btn {
+  background: none;
+  border: none;
+  color: var(--primary-color);
+  font-size: 0.9rem;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.clear-filters-btn:hover {
+  text-decoration: underline;
+}
+
+.filter-section {
+  margin-bottom: 20px;
+}
+
+.filter-section label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: #555;
+  font-size: 0.95rem;
+}
+
+.filter-section input,
+.filter-section select {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 0.95rem;
+  color: #333;
+}
+
+.filter-section input:focus,
+.filter-section select:focus {
+  outline: none;
+  border-color: var(--primary-color);
+}
+
+.pets-grid-container {
+  flex: 1;
+}
+
+.pets-count {
+  margin-bottom: 20px;
+  color: #666;
+  font-weight: bold;
+}
+
+.pets-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 25px;
+}
+
+.pet-card {
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.pet-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.pet-image {
+  height: 220px;
+  overflow: hidden;
+}
+
+.pet-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s;
+}
+
+.pet-card:hover .pet-image img {
+  transform: scale(1.05);
+}
+
+.pet-info {
+  padding: 20px;
+}
+
+.pet-info h3 {
+  margin: 0 0 8px;
+  font-size: 1.2rem;
+  color: #333;
+}
+
+.pet-breed {
+  color: #666;
+  font-size: 0.95rem;
+  margin-bottom: 10px;
+}
+
+.pet-details {
+  color: #777;
+  font-size: 0.9rem;
+  margin-bottom: 8px;
+}
+
+.pet-location {
+  color: #777;
+  font-size: 0.9rem;
+  margin-bottom: 15px;
+}
+
+.view-profile-btn {
+  display: inline-block;
+  background-color: var(--primary-color);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 4px;
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: background-color 0.3s;
+}
+
+.view-profile-btn:hover {
+  background-color: var(--secondary-color);
+}
+
+.no-results {
+  text-align: center;
+  padding: 40px 0;
+  color: #666;
+}
+
+.no-results p {
+  margin-bottom: 15px;
+}
+
+.no-results .clear-filters-btn {
+  padding: 8px 16px;
+  background-color: var(--primary-color);
+  color: white;
+  border-radius: 4px;
+  font-size: 0.9rem;
+}
+
+.no-results .clear-filters-btn:hover {
+  background-color: var(--secondary-color);
+  text-decoration: none;
+}
+
+@media (max-width: 992px) {
+  .pets-content-container {
+    flex-direction: column;
+  }
+  
+  .filter-sidebar {
+    width: 100%;
+    position: static;
+    margin-bottom: 30px;
+  }
+}
+
+@media (max-width: 768px) {
+  .pets-header h1 {
+    font-size: 2rem;
+  }
+  
+  .pets-grid {
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  }
+}
+
+@media (max-width: 480px) {
+  .pets-grid {
+    grid-template-columns: 1fr;
+  }
+}

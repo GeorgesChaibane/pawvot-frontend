@@ -1,38 +1,46 @@
-import React, { useState } from 'react';
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+
 import Navbar from './components/Navbar';
-import HeroSection from './components/HeroSection';
-import PetSection from './components/PetSection';
-import ProductSection from './components/ProductSection';
-import AdoptionProcess from './components/AdoptionProcess';
-import Metrics from './components/Metrics';
-import Testimonials from './components/Testimonials';
-import Faq from './components/Faq';
-import Footer from './components/Footer';
-import './components/styles/variables.css';
+import Footer from './components/Homepage/Footer';
+
+import Home from './components/Homepage/Home';
+import LoginPage from './components/Login/LoginPage';
+import SignupPage from './components/Singup/SignupPage';
+import AllPetsPage from './components/See All Pets/AllPetsPage';
+import PetProfilePage from './components/Pet Profile/PetProfilePage';
+import BookingPage from './components/Booking/BookingPage';
+import AllProductsPage from './components/See All Products/AllProductsPage';
+import ShoppingCartPage from './components/Shopping Cart/ShoppingCartPage';
+import Checkout from './components/Checkout/Checkout';
+import SMSVerification from './components/SMS Verification/SMSVerification';
+import PetProducts from './components/Pet Products/PetProducts';
+import Payment from './components/Payment/Payment';
+
+import './components/Homepage/styles/variables.css';
 
 function App() {
-  const [searchQuery, setSearchQuery] = useState('');
-
-  const handleSearch = (query) => {
-    setSearchQuery(query);
-    const adopt = document.getElementById('adopt');
-    if (adopt) {
-      adopt.scrollIntoView({ behavior: 'smooth' });
-    }
-  };
-
   return (
-    <div className="App">
-      <Navbar onSearch={handleSearch} />
-      <HeroSection />
-      <Metrics />
-      <PetSection searchQuery={searchQuery} />
-      <ProductSection searchQuery={searchQuery} />
-      <AdoptionProcess />
-      <Testimonials />
-      <Faq />
-      <Footer />
-    </div>
+    <Router>
+      <div className="App">
+        <Navbar />
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/signup" element={<SignupPage />} />
+          <Route path="/pets" element={<AllPetsPage />} />
+          <Route path="/pets/:petId" element={<PetProfilePage />} />
+          <Route path="/pets/:petId/book" element={<BookingPage />} />
+          <Route path="/products" element={<AllProductsPage />} />
+          <Route path="/products/:productId" element={<PetProducts />} />
+          <Route path="/cart" element={<ShoppingCartPage />} />
+          <Route path="/checkout" element={<Checkout />} />
+          <Route path="/payment" element={<Payment />} />
+          <Route path="/verify" element={<SMSVerification />} />
+        </Routes>
+        <Footer />
+      </div>
+    </Router>
   );
 }
 

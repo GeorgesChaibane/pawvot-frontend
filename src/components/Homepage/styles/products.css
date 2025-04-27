@@ -1,0 +1,210 @@
+.home-products-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 2rem;
+    margin: 2rem 0;
+}
+
+.home-product-card {
+    background: white;
+    border-radius: 10px;
+    overflow: hidden;
+    padding: 1.5rem;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.home-product-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+.home-product-category {
+    font-weight: 600;
+    font-size: 1.1vw;
+    margin-bottom: 0.5rem;
+    color: var(--primary-color);
+}
+
+.home-product-image {
+    text-align: center;
+    margin-bottom: 1rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.home-product-image img {
+    max-width: 100%;
+    height: 120px;
+    object-fit: contain;
+    transition: transform 0.3s ease;
+}
+
+.home-product-card:hover .home-product-image img {
+    transform: scale(1.05);
+}
+
+.home-product-info {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+}
+
+.home-product-info p {
+    margin-bottom: 1.5rem;
+    font-size: 0.9vw;
+    flex-grow: 1;
+    line-height: 1.5;
+}
+
+.home-shop-btn {
+    align-self: center;
+    padding: 0.5rem 1.5rem;
+    background: var(--secondary-color);
+    color: white;
+    border-radius: 5px;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 0.9vw;
+    margin-top: auto;
+    transition: all 0.3s ease;
+}
+
+.home-shop-btn:hover {
+    background: var(--primary-color);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(255, 107, 107, 0.3);
+}
+
+.category-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 20rem;
+    margin-top: 3rem;
+    flex-wrap: wrap;
+}
+
+.category-btn {
+    padding: 0.8rem 2rem;
+    background: var(--primary-color);
+    color: white;
+    border-radius: 10px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 1vw;
+    transition: all 0.3s ease;
+}
+
+.category-btn:hover {
+    background: var(--secondary-color);
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(255, 142, 142, 0.3);
+}
+
+.see-all-btn {
+    display: block;
+    text-align: center;
+    margin: 3rem auto;
+    background: var(--primary-color);
+    color: #fff;
+    font-weight: bold;
+    width: fit-content;
+    padding: 0.5rem 5rem;
+    font-size: 1.5vw;
+    border-radius: 10px;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.see-all-btn:hover {
+    background: var(--secondary-color);
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(255, 142, 142, 0.3);
+}
+
+@media (max-width: 1350px) {
+    .home-product-category {
+        font-size: 2vw;
+    }
+
+    .home-product-info p,
+    .home-shop-btn {
+        font-size: 1.5vw;
+    }
+
+    .category-btn {
+        font-size: 2vw;
+    }
+
+    .see-all-btn {
+        font-size: 2.5vw;
+    }
+
+    .category-buttons {
+        gap: 4rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .home-products-grid {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    }
+
+    .home-product-image img {
+        height: 100px;
+    }
+
+    .home-product-category {
+        font-size: 2.5vw;
+    }
+
+    .home-product-info p,
+    .home-shop-btn {
+        font-size: 2vw;
+    }
+
+    .category-buttons {
+        flex-direction: column;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .category-btn {
+        width: 80%;
+        text-align: center;
+        font-size: 2.5vw;
+    }
+
+    .see-all-btn {
+        font-size: 3vw;
+        padding: 0.5rem 3rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .home-products-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .home-product-category {
+        font-size: 4vw;
+    }
+
+    .home-product-info p,
+    .home-shop-btn {
+        font-size: 2.5vw;
+    }
+
+    .category-btn {
+        width: 90%;
+        font-size: 3vw;
+    }
+
+    .see-all-btn {
+        font-size: 3.5vw;
+        padding: 0.5rem 2rem;
+    }
+} 
