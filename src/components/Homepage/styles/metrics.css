@@ -1,34 +1,89 @@
+.metrics {
+    padding: 3rem 0;
+    background: #f9f9f9;
+}
+
+.metrics-title {
+    text-align: center;
+    font-size: 2rem;
+    margin-bottom: 2rem;
+    color: #333;
+}
+
+.metrics-category {
+    margin-bottom: 2.5rem;
+}
+
+.category-title {
+    font-size: 1.5rem;
+    margin-bottom: 1.2rem;
+    padding-left: 15px;
+    border-left: 5px solid;
+    position: relative;
+}
+
+.category-adoption {
+    color: #28a745;
+    border-color: #28a745;
+}
+
+.category-shop {
+    color: #17a2b8;
+    border-color: #17a2b8;
+}
+
+.category-users {
+    color: #6f42c1;
+    border-color: #6f42c1;
+}
+
 .metrics-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
     gap: 1.5rem;
-    margin: 3rem 0;
 }
 
 .metric-card {
     padding: 1.5rem;
-    border-radius: 10px;
+    border-radius: 12px;
     text-align: center;
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.05);
+    transition: transform 0.3s, box-shadow 0.3s;
+    background: white;
+    position: relative;
+    overflow: hidden;
+    border-top: 5px solid;
 }
 
-.metric-card.primary {
-    background-color: rgba(255, 142, 142, 1);
+.metric-card.adoption {
+    border-color: #28a745;
 }
 
-.metric-card.secondary {
-    background-color: rgba(255, 142, 142, 0.75);
+.metric-card.shop {
+    border-color: #17a2b8;
+}
+
+.metric-card.users {
+    border-color: #6f42c1;
+}
+
+.metric-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 25px rgba(0, 0, 0, 0.08);
 }
 
 .metric-card h4 {
     font-weight: 600;
-    margin-bottom: 0.5rem;
-    font-size: 1.1vw;
+    margin-bottom: 0.8rem;
+    font-size: 1rem;
+    color: #555;
 }
 
 .metric-card p {
-    font-size: 1.5vw;
+    font-size: 2rem;
     font-weight: 700;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.8rem;
+    color: #333;
 }
 
 .metric-percentage {
@@ -36,90 +91,85 @@
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
+    font-size: 0.9rem;
+    padding: 0.3rem 0.8rem;
+    border-radius: 20px;
+    width: fit-content;
+    margin: 0 auto;
 }
 
-.metric-percentage span {
-    font-size: 0.9vw;
-    font-weight: 600;
+.metric-percentage.positive {
+    color: #28a745;
+    background-color: rgba(40, 167, 69, 0.1);
+}
+
+.metric-percentage.negative {
+    color: #dc3545;
+    background-color: rgba(220, 53, 69, 0.1);
 }
 
 .metric-percentage img {
-    width: 1vw;
-    height: 1vw;
-    max-width: 12.5px;
-    max-height: 8px;
+    width: 12px;
+    height: 12px;
 }
 
 .badges-container {
     display: flex;
     justify-content: center;
     gap: 3rem;
-    margin-top: 2rem;
+    margin-top: 3rem;
 }
 
 .badge {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem 1rem;
+    gap: 1rem;
+    padding: 1rem 1.5rem;
     background: white;
-    border-radius: 10px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 12px;
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.05);
     transition: transform 0.3s ease;
 }
 
 .badge:hover {
-    transform: translateY(-3px);
+    transform: translateY(-5px);
+    box-shadow: 0 12px 25px rgba(0, 0, 0, 0.08);
 }
 
 .badge img {
-    width: 2.5vw;
-    height: 2.5vw;
-    max-width: 40px;
-    max-height: 40px;
+    width: 40px;
+    height: 40px;
 }
 
 .badge span {
-    color: var(--primary-color);
-    font-weight: 800;
-    font-size: 1vw;
+    color: #333;
+    font-weight: 600;
+    font-size: 1rem;
 }
 
-@media (max-width: 1350px) {
+@media (max-width: 1200px) {
     .metrics-grid {
         grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    }
-
-    .metric-card h4 {
-        font-size: 2vw;
-    }
-
-    .metric-card p {
-        font-size: 2.5vw;
-    }
-
-    .metric-percentage span {
-        font-size: 1.5vw;
-    }
-
-    .metric-percentage img {
-        width: 2vw;
-        height: 2vw;
-        max-width: 25px;
-        max-height: 12px;
-    }
-
-    .badge span {
-        font-size: 1.8vw;
-    }
-
-    .badge img {
-        width: 3.5vw;
-        height: 3.5vw;
     }
 }
 
 @media (max-width: 768px) {
+    .metrics-title {
+        font-size: 1.8rem;
+    }
+    
+    .category-title {
+        font-size: 1.3rem;
+    }
+    
+    .metrics-grid {
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    }
+    
+    .metric-card p {
+        font-size: 1.7rem;
+    }
+    
     .badges-container {
         flex-direction: column;
         align-items: center;
@@ -128,33 +178,39 @@
 
     .badge {
         width: 80%;
+        max-width: 300px;
         justify-content: center;
     }
 }
 
 @media (max-width: 576px) {
+    .metrics-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+    
+    .metric-card {
+        padding: 1rem;
+    }
+    
     .metric-card h4 {
-        font-size: 3vw;
+        font-size: 0.9rem;
     }
-
+    
     .metric-card p {
-        font-size: 4vw;
+        font-size: 1.5rem;
     }
-
-    .metric-percentage span {
-        font-size: 2.5vw;
+    
+    .metric-percentage {
+        font-size: 0.8rem;
     }
-
+    
     .badge {
         width: 90%;
+        padding: 0.8rem 1rem;
     }
-
+    
     .badge span {
-        font-size: 2.5vw;
-    }
-
-    .badge img {
-        width: 5vw;
-        height: 5vw;
+        font-size: 0.9rem;
     }
 } 

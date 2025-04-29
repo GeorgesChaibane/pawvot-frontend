@@ -2,76 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import './AllPetsPage.css';
 
-// Import placeholder data (in a real app, this would come from an API)
-const DUMMY_PETS = [
-  {
-    id: 'pet1',
-    name: 'Max',
-    type: 'Dog',
-    breed: 'Golden Retriever',
-    age: 2,
-    gender: 'Male',
-    location: 'Pet Zone, Beirut',
-    image: '/path/to/dog1.jpg',
-    description: 'Friendly and playful Golden Retriever looking for an active family.'
-  },
-  {
-    id: 'pet2',
-    name: 'Luna',
-    type: 'Cat',
-    breed: 'Persian',
-    age: 1,
-    gender: 'Female',
-    location: 'Pegasus Pets Shop, Jounieh',
-    image: '/path/to/cat1.jpg',
-    description: 'Sweet Persian cat that loves to cuddle and play with toys.'
-  },
-  {
-    id: 'pet3',
-    name: 'Rocky',
-    type: 'Dog',
-    breed: 'German Shepherd',
-    age: 3,
-    gender: 'Male',
-    location: 'Les Moustaches, Tripoli',
-    image: '/path/to/dog2.jpg',
-    description: 'Loyal and intelligent German Shepherd, good with kids.'
-  },
-  {
-    id: 'pet4',
-    name: 'Bella',
-    type: 'Cat',
-    breed: 'Siamese',
-    age: 2,
-    gender: 'Female',
-    location: 'Pet Zone, Beirut',
-    image: '/path/to/cat2.jpg',
-    description: 'Vocal and affectionate Siamese cat seeking a loving home.'
-  },
-  {
-    id: 'pet5',
-    name: 'Charlie',
-    type: 'Dog',
-    breed: 'Beagle',
-    age: 1,
-    gender: 'Male',
-    location: 'Pegasus Pets Shop, Jounieh',
-    image: '/path/to/dog3.jpg',
-    description: 'Curious and friendly Beagle puppy with lots of energy.'
-  },
-  {
-    id: 'pet6',
-    name: 'Milo',
-    type: 'Other',
-    breed: 'Rabbit',
-    age: 1,
-    gender: 'Male',
-    location: 'Les Moustaches, Tripoli',
-    image: '/path/to/rabbit.jpg',
-    description: 'Adorable and calm rabbit that loves carrots and being petted.'
-  }
-];
-
 const AllPetsPage = () => {
   const [pets, setPets] = useState([]);
   const [filteredPets, setFilteredPets] = useState([]);
@@ -83,11 +13,40 @@ const AllPetsPage = () => {
     location: ''
   });
   const [searchQuery, setSearchQuery] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    // In a real app, this would be an API call
-    setPets(DUMMY_PETS);
-    setFilteredPets(DUMMY_PETS);
+    // Fetch pets from API
+    const fetchPets = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch('/api/pets/all');
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch pets');
+        }
+        
+        const data = await response.json();
+        
+        // Add gender field (not in API but needed for filtering)
+        const petsWithGender = data.map(pet => ({
+          ...pet,
+          gender: Math.random() > 0.5 ? 'Male' : 'Female', // Random gender assignment
+          age: typeof pet.age === 'string' ? parseInt(pet.age) || 1 : pet.age // Ensure age is a number
+        }));
+        
+        setPets(petsWithGender);
+        setFilteredPets(petsWithGender);
+        setLoading(false);
+      } catch (error) {
+        console.error('Error fetching pets:', error);
+        setError(error.message);
+        setLoading(false);
+      }
+    };
+    
+    fetchPets();
   }, []);
 
   useEffect(() => {
@@ -104,7 +63,7 @@ const AllPetsPage = () => {
         pet.name.toLowerCase().includes(query) ||
         pet.breed.toLowerCase().includes(query) ||
         pet.location.toLowerCase().includes(query) ||
-        pet.description.toLowerCase().includes(query)
+        (pet.description && pet.description.toLowerCase().includes(query))
       );
     }
 
@@ -157,9 +116,17 @@ const AllPetsPage = () => {
   const petTypes = [...new Set(pets.map(pet => pet.type))];
   const petBreeds = [...new Set(pets.map(pet => pet.breed))];
   const petLocations = [...new Set(pets.map(pet => {
-    const [shop] = pet.location.split(',');
+    const [shop] = pet.location ? pet.location.split(',') : ['Unknown'];
     return shop.trim();
   }))];
+
+  if (loading) {
+    return <div className="pets-loading">Loading pets...</div>;
+  }
+
+  if (error) {
+    return <div className="pets-error">Error: {error}</div>;
+  }
 
   return (
     <div className="all-pets-page">
@@ -275,7 +242,7 @@ const AllPetsPage = () => {
           ) : (
             <div className="pets-grid">
               {filteredPets.map(pet => (
-                <div key={pet.id} className="pet-card">
+                <div key={pet._id} className="pet-card">
                   <div className="pet-image">
                     <img src={pet.image} alt={pet.name} />
                   </div>
@@ -284,7 +251,7 @@ const AllPetsPage = () => {
                     <p className="pet-breed">{pet.breed}</p>
                     <p className="pet-details">{pet.age} year{pet.age !== 1 ? 's' : ''} • {pet.gender}</p>
                     <p className="pet-location">{pet.location}</p>
-                    <Link to={`/pets/${pet.id}`} className="view-profile-btn">View Profile</Link>
+                    <Link to={`/pets/${pet._id}`} className="view-profile-btn">View Profile</Link>
                   </div>
                 </div>
               ))}

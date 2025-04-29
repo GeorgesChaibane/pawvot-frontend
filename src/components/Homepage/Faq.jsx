@@ -37,7 +37,9 @@ const Faq = () => {
             <div key={index} className={`faq-item ${openItem === index ? 'open' : ''}`}>
               <div className="faq-question" onClick={() => toggleFaq(index)}>
                 <h3>{item.question}</h3>
-                <span className="faq-toggle">{openItem === index ? '×' : '+'}</span>
+                <span className="faq-toggle">
+                  {openItem === index ? '×' : '▶'}
+                </span>
               </div>
               <div className="faq-answer">
                 <p>{item.answer}</p>

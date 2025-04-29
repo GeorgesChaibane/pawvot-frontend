@@ -33,13 +33,18 @@
 }
 
 .faq-toggle {
-    font-size: 1.5vw;
+    font-size: 1.2rem;
     font-weight: bold;
-    transition: transform 0.3s ease;
+    color: var(--primary-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
 }
 
 .faq-item.open .faq-toggle {
-    transform: rotate(90deg);
+    color: #e63946;
 }
 
 .faq-answer {
@@ -79,7 +84,7 @@
     }
 
     .faq-toggle {
-        font-size: 3vw;
+        font-size: 1.4rem;
     }
 
     .faq-answer p {
@@ -97,7 +102,7 @@
     }
 
     .faq-toggle {
-        font-size: 3.5vw;
+        font-size: 1.2rem;
     }
 
     .faq-answer p {
@@ -115,7 +120,7 @@
     }
 
     .faq-question span {
-        font-size: 5vw;
+        font-size: 1.1rem;
     }
 
     .faq-answer p {

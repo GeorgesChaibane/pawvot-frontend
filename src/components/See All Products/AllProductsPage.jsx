@@ -450,7 +450,7 @@ const AllProductsPage = () => {
                       <div className="product-sale-tag">Sale</div>
                     )}
                   </div>
-                  <div className="product-info">
+                  <div className="product-info-all">
                     <h3>{product.name}</h3>
                     <p className="product-category">{product.category} • {product.subcategory}</p>
                     
@@ -470,13 +470,21 @@ const AllProductsPage = () => {
                       <span>{product.rating}</span>
                     </div>
                     
-                    <button 
-                      className="add-to-cart-btn"
-                      onClick={() => addToCart(product)}
-                      disabled={product.stock === 0}
-                    >
-                      {product.stock === 0 ? 'Out of Stock' : 'Add to Cart'}
-                    </button>
+                    <div className="product-buttons-all">
+                      <button 
+                        className="add-to-cart-btn"
+                        onClick={() => addToCart(product)}
+                        disabled={product.stock === 0}
+                      >
+                        {product.stock === 0 ? 'Out of Stock' : 'Add to Cart'}
+                      </button>
+                      <Link 
+                        to={`/products/${product.id}`} 
+                        className="buy-now-btn-all"
+                      >
+                        Buy Now
+                      </Link>
+                    </div>
                   </div>
                 </div>
               ))}

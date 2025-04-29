@@ -16,6 +16,10 @@ import Checkout from './components/Checkout/Checkout';
 import SMSVerification from './components/SMS Verification/SMSVerification';
 import PetProducts from './components/Pet Products/PetProducts';
 import Payment from './components/Payment/Payment';
+import AZIndexPage from './components/AZIndex/AZIndexPage';
+import OrderConfirmation from './components/OrderConfirmation/OrderConfirmation';
+import OrderHistory from './components/UserAccount/OrderHistory';
+import OrderDetail from './components/UserAccount/OrderDetail';
 
 import './components/Homepage/styles/variables.css';
 
@@ -37,6 +41,10 @@ function App() {
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/payment" element={<Payment />} />
           <Route path="/verify" element={<SMSVerification />} />
+          <Route path="/a-z-index" element={<AZIndexPage />} />
+          <Route path="/order-confirmation" element={<OrderConfirmation />} />
+          <Route path="/account/orders" element={<OrderHistory />} />
+          <Route path="/account/orders/:orderId" element={<OrderDetail />} />
         </Routes>
         <Footer />
       </div>

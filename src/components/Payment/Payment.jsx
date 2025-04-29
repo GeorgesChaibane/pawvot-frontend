@@ -5,24 +5,31 @@ import './Payment.css';
 const Payment = () => {
   const navigate = useNavigate();
   const [orderDetails, setOrderDetails] = useState(null);
-  const [paymentMethod, setPaymentMethod] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState('Credit Card');
   const [isLoading, setIsLoading] = useState(false);
+  const [cart, setCart] = useState([]);
   const [cardDetails, setCardDetails] = useState({
     cardNumber: '',
     cardName: '',
     expiryDate: '',
     cvv: ''
   });
+  const [error, setError] = useState('');
   
   useEffect(() => {
-    // Get order details from localStorage
-    const storedOrderDetails = JSON.parse(localStorage.getItem('orderDetails'));
+    // Get order details from local storage
+    const storedOrderDetails = localStorage.getItem('checkoutDetails');
+    
     if (storedOrderDetails) {
-      setOrderDetails(storedOrderDetails);
-      setPaymentMethod(storedOrderDetails.paymentMethod);
+      setOrderDetails(JSON.parse(storedOrderDetails));
     } else {
-      // Redirect back to checkout if no order details
       navigate('/checkout');
+    }
+    
+    // Get cart items from local storage
+    const storedCart = localStorage.getItem('cartItems');
+    if (storedCart) {
+      setCart(JSON.parse(storedCart));
     }
   }, [navigate]);
   
@@ -59,29 +66,73 @@ const Payment = () => {
     setIsLoading(true);
     
     try {
-      // Simulate payment processing
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Prepare order data
+      const orderItems = cart.map(item => ({
+        product: item.product._id,
+        name: item.product.name,
+        image: item.product.images[0],
+        price: item.product.price,
+        quantity: item.quantity
+      }));
       
-      // Create order confirmation
-      const orderConfirmation = {
-        ...orderDetails,
-        paymentMethod,
-        orderId: `ORD-${Date.now()}`,
-        orderDate: new Date().toISOString(),
-        status: 'PAID'
+      const orderData = {
+        orderItems,
+        shippingAddress: {
+          ...orderDetails.shippingAddress
+        },
+        paymentMethod
       };
       
-      // Save order confirmation to localStorage
-      localStorage.setItem('orderConfirmation', JSON.stringify(orderConfirmation));
+      // Make API call to create order
+      const response = await fetch('/api/orders', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify(orderData)
+      });
       
-      // Clear cart after successful payment
+      if (!response.ok) {
+        throw new Error('Failed to create order');
+      }
+      
+      const orderConfirmation = await response.json();
+      
+      // Process payment based on payment method
+      if (paymentMethod === 'Credit Card') {
+        // Simulate payment processing for credit card
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        
+        // Update order to paid status
+        await fetch(`/api/orders/${orderConfirmation._id}/pay`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          },
+          body: JSON.stringify({
+            paymentResult: {
+              id: `PAYMENT-${Date.now()}`,
+              status: 'COMPLETED',
+              update_time: new Date().toISOString(),
+              email_address: localStorage.getItem('userEmail') || 'user@example.com'
+            }
+          })
+        });
+      }
+      
+      // Clear cart after successful order
       localStorage.removeItem('cartItems');
+      
+      // Store order ID for confirmation page
+      localStorage.setItem('lastOrderId', orderConfirmation._id);
       
       // Navigate to confirmation page
       navigate('/order-confirmation');
     } catch (error) {
-      console.error('Payment error:', error);
-      // Handle payment error
+      console.error('Order creation error:', error);
+      setError('Failed to process your order. Please try again.');
       setIsLoading(false);
     }
   };

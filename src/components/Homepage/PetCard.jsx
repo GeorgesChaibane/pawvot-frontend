@@ -18,7 +18,7 @@ const PetCard = ({ pet }) => {
           <p>Age: {age}</p>
           <p>Location: {location}</p>
         </div>
-        <a href={`/pets/${name.toLowerCase()}`} className="btn home-view-btn">View Profile</a>
+        <a href={`/pets/${pet._id || pet.id || name.toLowerCase()}`} className="btn home-view-btn">View Profile</a>
       </div>
     </article>
   );

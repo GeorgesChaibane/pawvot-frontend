@@ -170,13 +170,35 @@ const PetProducts = () => {
               </button>
             </div>
             
-            <button 
-              className="add-to-cart-btn" 
-              onClick={addToCart}
-              disabled={!product.inStock}
-            >
-              Add to Cart
-            </button>
+            <div className="product-buttons">
+              <button 
+                className="add-to-cart-btn-2" 
+                onClick={addToCart}
+                disabled={!product.inStock}
+              >
+                Add to Cart
+              </button>
+              
+              <button 
+                className="buy-now-btn" 
+                onClick={() => {
+                  // Add to cart then go directly to checkout
+                  const currentCart = JSON.parse(localStorage.getItem('cartItems')) || [];
+                  currentCart.push({
+                    id: product.id,
+                    name: product.name,
+                    price: product.price,
+                    image: product.images[0],
+                    quantity: quantity
+                  });
+                  localStorage.setItem('cartItems', JSON.stringify(currentCart));
+                  navigate('/checkout');
+                }}
+                disabled={!product.inStock}
+              >
+                Buy Now
+              </button>
+            </div>
           </div>
           
           <div className="product-tabs">

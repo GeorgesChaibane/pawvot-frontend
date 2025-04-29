@@ -8,6 +8,7 @@ const Navbar = ({ onSearch }) => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+    const [cartItems, setCartItems] = useState([]);
 
     useEffect(() => {
         const handleResize = () => {
@@ -19,6 +20,32 @@ const Navbar = ({ onSearch }) => {
 
         window.addEventListener('resize', handleResize);
         return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
+    useEffect(() => {
+        const getCartItems = () => {
+            const items = JSON.parse(localStorage.getItem('cartItems')) || [];
+            setCartItems(items);
+        };
+
+        getCartItems();
+        
+        // Listen for storage events to update cart count when cart changes
+        const handleStorageChange = (e) => {
+            if (e.key === 'cartItems') {
+                getCartItems();
+            }
+        };
+
+        window.addEventListener('storage', handleStorageChange);
+        
+        // Check cart every 2 seconds as a fallback
+        const interval = setInterval(getCartItems, 2000);
+        
+        return () => {
+            window.removeEventListener('storage', handleStorageChange);
+            clearInterval(interval);
+        };
     }, []);
 
     const handleSubmit = (e) => {
@@ -33,6 +60,9 @@ const Navbar = ({ onSearch }) => {
     const closeMenu = () => {
         setIsMenuOpen(false);
     };
+
+    // Calculate total number of items in cart
+    const cartItemCount = cartItems.reduce((total, item) => total + item.quantity, 0);
 
     return (
         <header>
@@ -55,34 +85,45 @@ const Navbar = ({ onSearch }) => {
                     </form>
                 </div>
                 
-                <button className="burger-menu" onClick={toggleMenu} aria-label="Toggle menu">
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                </button>
-                
-                <div className={`nav-container ${isMenuOpen ? 'active' : ''}`}>
-                    <nav>
-                        <ul>
-                            <li><Link to="/pets" onClick={closeMenu}>Adopt</Link></li>
-                            <li><Link to="/products" onClick={closeMenu}>Shop</Link></li>
-                            <li><Link to="/bookings" onClick={closeMenu}>Bookings</Link></li>
-                            <li><Link to="/cart" onClick={closeMenu}>Cart</Link></li>
-                            {isMobile && (
-                                <>
-                                    <li><Link to="/signup" onClick={closeMenu}>Signup</Link></li>
-                                    <li><Link to="/login" onClick={closeMenu}>Login</Link></li>
-                                </>
-                            )}
-                        </ul>
-                    </nav>
+                <div className="nav-auth-container">
+                    <button className="burger-menu" onClick={toggleMenu} aria-label="Toggle menu">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </button>
                     
-                    {!isMobile && (
-                        <div className="auth-buttons">
-                            <Link to="/signup" className="login-signup">Signup</Link>
-                            <Link to="/login" className="login-signup">Login</Link>
-                        </div>
-                    )}
+                    <div className={`nav-container ${isMenuOpen ? 'active' : ''}`}>
+                        <nav>
+                            <ul>
+                                <li><Link to="/pets" onClick={closeMenu}>Adopt</Link></li>
+                                <li><Link to="/products" onClick={closeMenu}>Shop</Link></li>
+                                <li><Link to="/bookings" onClick={closeMenu}>Bookings</Link></li>
+                                <li><Link to="/account/orders" onClick={closeMenu}>Orders</Link></li>
+                                <li>
+                                    <Link to="/cart" onClick={closeMenu} className="cart-link">
+                                        <span className="cart-icon">🛒</span> 
+                                        Cart
+                                        {cartItemCount > 0 && (
+                                            <span className="cart-count">{cartItemCount}</span>
+                                        )}
+                                    </Link>
+                                </li>
+                                {isMobile && (
+                                    <>
+                                        <li><Link to="/signup" onClick={closeMenu}>Signup</Link></li>
+                                        <li><Link to="/login" onClick={closeMenu}>Login</Link></li>
+                                    </>
+                                )}
+                            </ul>
+                        </nav>
+                        
+                        {!isMobile && (
+                            <div className="auth-buttons">
+                                <Link to="/signup" className="login-signup">Signup</Link>
+                                <Link to="/login" className="login-signup">Login</Link>
+                            </div>
+                        )}
+                    </div>
                 </div>
                 
                 {isMenuOpen && <div className="overlay" onClick={closeMenu}></div>}

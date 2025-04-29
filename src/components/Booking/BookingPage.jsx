@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link, /*useNavigate*/ } from 'react-router-dom';
 import './BookingPage.css';
 
 // Import placeholder data (in a real app, this would come from an API)
@@ -27,7 +27,7 @@ const BookingPage = () => {
   const [pet, setPet] = useState(null);
   const [loading, setLoading] = useState(true);
   const [bookingSuccess, setBookingSuccess] = useState(false);
-  const navigate = useNavigate();
+  //const navigate = useNavigate();
   
   const [formData, setFormData] = useState({
     date: '',

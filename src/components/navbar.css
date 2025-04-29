@@ -40,10 +40,8 @@ header {
 .search-container {
     flex-grow: 1;
     max-width: 500px;
-    margin: 0 20px;
+    margin: 0 auto;
     position: relative;
-    margin-left: 400px;
-    margin-right: 50px;
 }
 
 .search-form {
@@ -306,4 +304,50 @@ nav a:hover {
         width: 80%;
         right: -80%;
     }
+}
+
+.nav-auth-container {
+    display: flex;
+    align-items: center;
+    margin-left: auto;
+}
+
+nav ul li a {
+    display: flex;
+    align-items: center;
+    font-weight: 500;
+    color: var(--text-primary);
+    text-decoration: none;
+    position: relative;
+    transition: color 0.3s;
+}
+
+nav ul li a:hover {
+    color: var(--primary-color);
+}
+
+.cart-link {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.cart-icon {
+    margin-right: 4px;
+}
+
+.cart-count {
+    position: absolute;
+    top: -8px;
+    right: -12px;
+    background-color: var(--primary-color);
+    color: white;
+    font-size: 0.7rem;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
 } 

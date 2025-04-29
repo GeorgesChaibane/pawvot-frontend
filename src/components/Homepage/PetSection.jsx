@@ -1,85 +1,102 @@
 import React, { useState, useEffect } from 'react';
 import PetCard from './PetCard';
 import './styles/pets.css';
+import axios from 'axios';
 
-import scoobyImg from '../../assets/images/breed/dog/scooby.jpeg';
-import galaxyImg from '../../assets/images/breed/dog/galaxy-destroyer.png';
-import cupcakeImg from '../../assets/images/breed/dog/cupcake.png';
-import princeImg from '../../assets/images/breed/cat/prince.jpeg';
-import grizouImg from '../../assets/images/breed/cat/grizou.png';
-import beerusImg from '../../assets/images/breed/cat/beerus.png';
+// import scoobyImg from '../../assets/images/breed/dog/scooby.jpeg';
+// import galaxyImg from '../../assets/images/breed/dog/galaxy-destroyer.png';
+// import cupcakeImg from '../../assets/images/breed/dog/cupcake.png';
+// import princeImg from '../../assets/images/breed/cat/prince.jpeg';
+// import grizouImg from '../../assets/images/breed/cat/grizou.png';
+// import beerusImg from '../../assets/images/breed/cat/beerus.png';
 
-const petsData = [
-  {
-    id: 1,
-    type: 'Dog',
-    name: 'Scooby',
-    breed: 'Golden Retriever',
-    age: '2 years',
-    location: 'Baabda',
-    image: scoobyImg
-  },
-  {
-    id: 2,
-    type: 'Dog',
-    name: 'Galaxy Destroyer',
-    breed: 'German Shepherd',
-    age: '6 years',
-    location: 'Ashrafiye',
-    image: galaxyImg
-  },
-  {
-    id: 3,
-    type: 'Dog',
-    name: 'Cupcake',
-    breed: 'Husky',
-    age: '1 year',
-    location: 'Sin El Fil',
-    image: cupcakeImg
-  },
-  {
-    id: 4,
-    type: 'Cat',
-    name: 'Prince',
-    breed: 'Persian',
-    age: '6 months',
-    location: 'Dekwaneh',
-    image: princeImg
-  },
-  {
-    id: 5,
-    type: 'Cat',
-    name: 'Grizou',
-    breed: 'British Shorthair',
-    age: '4 years',
-    location: 'Baabda',
-    image: grizouImg
-  },
-  {
-    id: 6,
-    type: 'Cat',
-    name: 'Beerus',
-    breed: 'Sphynx',
-    age: '2 years',
-    location: 'Dbayeh',
-    image: beerusImg
-  }
-];
+// const petsData = [
+//   {
+//     id: 1,
+//     type: 'Dog',
+//     name: 'Scooby',
+//     breed: 'Golden Retriever',
+//     age: '2 years',
+//     location: 'Baabda',
+//     image: scoobyImg
+//   },
+//   {
+//     id: 2,
+//     type: 'Dog',
+//     name: 'Galaxy Destroyer',
+//     breed: 'German Shepherd',
+//     age: '6 years',
+//     location: 'Ashrafiye',
+//     image: galaxyImg
+//   },
+//   {
+//     id: 3,
+//     type: 'Dog',
+//     name: 'Cupcake',
+//     breed: 'Husky',
+//     age: '1 year',
+//     location: 'Sin El Fil',
+//     image: cupcakeImg
+//   },
+//   {
+//     id: 4,
+//     type: 'Cat',
+//     name: 'Prince',
+//     breed: 'Persian',
+//     age: '6 months',
+//     location: 'Dekwaneh',
+//     image: princeImg
+//   },
+//   {
+//     id: 5,
+//     type: 'Cat',
+//     name: 'Grizou',
+//     breed: 'British Shorthair',
+//     age: '4 years',
+//     location: 'Baabda',
+//     image: grizouImg
+//   },
+//   {
+//     id: 6,
+//     type: 'Cat',
+//     name: 'Beerus',
+//     breed: 'Sphynx',
+//     age: '2 years',
+//     location: 'Dbayeh',
+//     image: beerusImg
+//   }
+// ];
 
 const PetSection = ({ searchQuery }) => {
-  const [pets, setPets] = useState(petsData);
+  const [pets, setPets] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [filters, setFilters] = useState({
     type: '',
     breed: '',
     location: ''
   });
 
-  const petTypes = [...new Set(petsData.map(pet => pet.type))];
-  const petBreeds = [...new Set(petsData.map(pet => pet.breed))];
-  const locations = [...new Set(petsData.map(pet => pet.location))];
+  useEffect(() => {
+    const fetchPets = async () => {
+      try {
+        setLoading(true);
+        // Fetch pets from our backend API
+        const response = await axios.get('http://localhost:5000/api/pets');
+        setPets(response.data);
+        setLoading(false);
+      } catch (error) {
+        console.error('Error fetching pets:', error);
+        setError('Failed to load pets. Please try again later.');
+        setLoading(false);
+      }
+    };
+
+    fetchPets();
+  }, []);
 
   useEffect(() => {
-    let filteredPets = [...petsData];
+    let filteredPets = [...pets];
 
     if (filters.type) {
       filteredPets = filteredPets.filter(pet => pet.type === filters.type);
@@ -112,6 +129,14 @@ const PetSection = ({ searchQuery }) => {
       [name]: value
     }));
   };
+
+  // Extract unique values for filter dropdowns
+  const petTypes = [...new Set(pets.map(pet => pet.type))];
+  const petBreeds = [...new Set(pets.map(pet => pet.breed))];
+  const locations = [...new Set(pets.map(pet => pet.location))];
+
+  if (loading) return <div className="loading">Loading pets...</div>;
+  if (error) return <div className="error">{error}</div>;
 
   return (
     <section id="adopt">
@@ -170,8 +195,8 @@ const PetSection = ({ searchQuery }) => {
         
         {pets.length > 0 ? (
           <div className="home-pets-grid">
-            {pets.map(pet => (
-              <PetCard key={pet.id} pet={pet} />
+            {pets.slice(0, 6).map(pet => (
+              <PetCard key={pet._id || pet.id} pet={pet} />
             ))}
           </div>
         ) : (
