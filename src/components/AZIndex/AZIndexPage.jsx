@@ -1,136 +1,125 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { Helmet } from 'react-helmet';
+import SitemapService from '../../services/sitemapService';
 import './AZIndexPage.css';
 
 const AZIndexPage = () => {
-  // Define all the links to be displayed in the A-Z index
-  const azData = {
-    A: [
-      { name: 'About Us', path: '/about' },
-      { name: 'Adoption Process', path: '/adoption-process' },
-      { name: 'Adoption Services', path: '/adoption-services' },
-      { name: 'All Pets', path: '/pets' }
-    ],
-    B: [
-      { name: 'Blog', path: '/blog' },
-      { name: 'Bookings', path: '/bookings' }
-    ],
-    C: [
-      { name: 'Cart', path: '/cart' },
-      { name: 'Checkout', path: '/checkout' },
-      { name: 'Contact Us', path: '/contact' },
-      { name: 'Customer Service', path: '/customer-service' }
-    ],
-    D: [
-      { name: 'Dog Products', path: '/products/dog' },
-      { name: 'Donation', path: '/donation' }
-    ],
-    E: [
-      { name: 'Events', path: '/events' }
-    ],
-    F: [
-      { name: 'FAQ', path: '/faq' },
-      { name: 'Forgot Password', path: '/forgot-password' }
-    ],
-    G: [
-      { name: 'Gift Cards', path: '/gift-cards' }
-    ],
-    H: [
-      { name: 'Home', path: '/' },
-      { name: 'How It Works', path: '/how-it-works' }
-    ],
-    L: [
-      { name: 'Legal Information', path: '/legal' },
-      { name: 'Login', path: '/login' }
-    ],
-    M: [
-      { name: 'My Account', path: '/account' }
-    ],
-    N: [
-      { name: 'Newsletter', path: '/newsletter' }
-    ],
-    O: [
-      { name: 'Order History', path: '/orders' }
-    ],
-    P: [
-      { name: 'Pawvot Rewards', path: '/rewards' },
-      { name: 'Pet Adoption', path: '/pet-adoption' },
-      { name: 'Pet Care', path: '/pet-care' },
-      { name: 'Pet Profile', path: '/pet-profile' },
-      { name: 'Pet Products', path: '/products' },
-      { name: 'Privacy Policy', path: '/privacy-policy' }
-    ],
-    R: [
-      { name: 'Returns & Refunds', path: '/returns' }
-    ],
-    S: [
-      { name: 'Shipping', path: '/shipping' },
-      { name: 'Shop', path: '/products' },
-      { name: 'Signup', path: '/signup' },
-      { name: 'Sitemap', path: '/a-z-index' },
-      { name: 'Support', path: '/support' }
-    ],
-    T: [
-      { name: 'Terms & Conditions', path: '/terms' },
-      { name: 'Track Order', path: '/track-order' }
-    ],
-    V: [
-      { name: 'Vet Services', path: '/vet-services' },
-      { name: 'Volunteer', path: '/volunteer' }
-    ],
-    W: [
-      { name: 'Wishlist', path: '/wishlist' }
-    ]
-  };
-
-  // Get all available letters
-  const letters = Object.keys(azData);
+  const [azData, setAzData] = useState({});
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   
   // All possible letters in the alphabet
   const allLetters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 
+  // Fetch the dynamic A-Z index data
+  useEffect(() => {
+    const fetchAZIndexData = async () => {
+      try {
+        setLoading(true);
+        const data = await SitemapService.generateAZIndex();
+        setAzData(data);
+        setError(null);
+      } catch (err) {
+        console.error('Error loading A-Z index data:', err);
+        setError('Failed to load site index. Please try again.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAZIndexData();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="az-index-page">
+        <div className="az-loading">
+          <div className="az-spinner"></div>
+          <p>Generating site index...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="az-index-page">
+        <div className="az-error">
+          <h2>Oops! Something went wrong</h2>
+          <p>{error}</p>
+          <button 
+            onClick={() => window.location.reload()}
+            className="az-retry-button"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Get letters that have content
+  const activeLetters = allLetters.filter(letter => azData[letter] && azData[letter].length > 0);
+
   return (
     <div className="az-index-page">
+      <Helmet>
+        <title>A-Z Index - PawVot</title>
+        <meta name="description" content="Comprehensive alphabetical directory of all pages, products, and services at PawVot - your one-stop pet adoption and shopping platform." />
+        <meta name="keywords" content="pet directory, pawvot sitemap, pet adoption index, pet shop index, a to z index" />
+        <link rel="canonical" href="/a-z-index" />
+      </Helmet>
+
       <div className="az-header">
         <h1>A-Z Index</h1>
-        <p>Searching for specific information? This alphabetical listing provides a comprehensive overview of services, subjects, departments, and pages to assist you in your quest.</p>
+        <p>Browse our comprehensive alphabetical directory of all pages, products, and services available at PawVot.</p>
       </div>
 
-      <div className="container">
-        <div className="az-letter-nav">
-          {allLetters.map((letter) => (
-            <a 
-              key={letter} 
-              href={`#${letter}`}
-              className={azData[letter] ? 'available' : 'unavailable'}
-            >
-              {letter}
-            </a>
-          ))}
-        </div>
+      <nav className="az-letter-nav" aria-label="Alphabetical navigation">
+        {allLetters.map((letter) => (
+          <a 
+            key={letter} 
+            href={azData[letter] && azData[letter].length > 0 ? `#letter-${letter}` : null}
+            className={azData[letter] && azData[letter].length > 0 ? 'available' : 'unavailable'}
+            aria-disabled={!(azData[letter] && azData[letter].length > 0)}
+          >
+            {letter}
+          </a>
+        ))}
+      </nav>
 
-        <div className="az-content">
-          {allLetters.map((letter) => {
-            const letterData = azData[letter] || [];
-            
-            // Skip rendering empty letter sections
-            if (letterData.length === 0) return null;
-            
-            return (
-              <div key={letter} id={letter} className="az-letter-section">
-                <h2>{letter}</h2>
-                <ul>
-                  {letterData.map((item, index) => (
-                    <li key={index}>
-                      <Link to={item.path}>{item.name}</Link>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            );
-          })}
-        </div>
+      <div className="az-content">
+        {activeLetters.map((letter) => (
+          <section key={letter} id={`letter-${letter}`} className="az-letter-section">
+            <h2>{letter}</h2>
+            <ul>
+              {azData[letter].map((item, index) => (
+                <li key={index}>
+                  <article className="az-item">
+                    <Link to={item.path}>
+                      <h3>{item.name}</h3>
+                    </Link>
+                    {item.description && (
+                      <p>{item.description}</p>
+                    )}
+                  </article>
+                </li>
+              ))}
+            </ul>
+          </section>
+        ))}
+        
+        {activeLetters.length === 0 && (
+          <div className="az-empty-state">
+            <p>No pages found in the index. Please try again later.</p>
+          </div>
+        )}
       </div>
+
+      <footer className="az-footer">
+        <p>This index is automatically generated and updated regularly to include the latest content.</p>
+      </footer>
     </div>
   );
 };

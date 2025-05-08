@@ -1,14 +1,16 @@
 .az-index-page {
-  padding: 40px 0 60px;
-  background-color: #f9f9f9;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
 }
 
 .az-header {
+  text-align: center;
+  margin-bottom: 40px;
   background-color: var(--primary-color);
   color: white;
-  text-align: center;
-  padding: 40px 20px;
-  margin-bottom: 30px;
+  padding: 60px 20px;
+  border-radius: 8px;
 }
 
 .az-header h1 {
@@ -22,35 +24,24 @@
   margin: 0 auto;
 }
 
-.container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 20px;
-}
-
 .az-letter-nav {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  margin-bottom: 30px;
-  padding: 15px;
-  background-color: white;
-  border-radius: 10px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  margin-bottom: 40px;
+  gap: 8px;
 }
 
 .az-letter-nav a {
-  display: inline-block;
   width: 36px;
   height: 36px;
-  line-height: 36px;
-  text-align: center;
-  margin: 5px;
-  font-weight: 600;
-  text-decoration: none;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   border-radius: 50%;
+  font-weight: bold;
+  text-decoration: none;
   transition: all 0.3s ease;
-  font-size: 1rem;
 }
 
 .az-letter-nav a.available {
@@ -59,122 +50,176 @@
 }
 
 .az-letter-nav a.unavailable {
-  background-color: #e9e9e9;
-  color: #999;
+  background-color: #f0f0f0;
+  color: #aaa;
   cursor: default;
 }
 
 .az-letter-nav a.available:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 5px 10px rgba(255, 107, 107, 0.3);
+  background-color: var(--secondary-color);
+  transform: scale(1.1);
 }
 
 .az-content {
-  background-color: white;
-  border-radius: 10px;
-  padding: 20px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  margin-bottom: 40px;
 }
 
 .az-letter-section {
   margin-bottom: 30px;
-  padding-bottom: 20px;
-  border-bottom: 1px solid #eee;
-}
-
-.az-letter-section:last-child {
-  border-bottom: none;
-  margin-bottom: 0;
+  scroll-margin-top: 100px; /* For smooth scrolling */
 }
 
 .az-letter-section h2 {
-  font-size: 1.8rem;
+  font-size: 2rem;
   color: var(--primary-color);
-  margin-bottom: 15px;
-  padding-bottom: 10px;
   border-bottom: 2px solid var(--primary-color);
-  display: inline-block;
+  padding-bottom: 10px;
+  margin-bottom: 20px;
 }
 
 .az-letter-section ul {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: 10px 20px;
   list-style: none;
   padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
 }
 
-.az-letter-section ul li {
-  padding: 8px 0;
+.az-letter-section li {
+  margin-bottom: 0;
 }
 
-.az-letter-section ul li a {
-  color: #333;
+.az-item {
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  padding: 15px;
+  transition: transform 0.3s, box-shadow 0.3s;
+  height: 100%;
+}
+
+.az-item:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 5px 12px rgba(0, 0, 0, 0.1);
+}
+
+.az-item h3 {
+  margin: 0 0 8px;
+  font-size: 1.1rem;
+  color: var(--primary-color);
+}
+
+.az-item p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.az-item a {
   text-decoration: none;
-  transition: color 0.3s;
-  display: block;
-  padding-left: 15px;
-  position: relative;
 }
 
-.az-letter-section ul li a:before {
-  content: '•';
-  position: absolute;
-  left: 0;
-  color: var(--primary-color);
+.az-footer {
+  text-align: center;
+  margin-top: 60px;
+  font-size: 0.9rem;
+  color: #666;
 }
 
-.az-letter-section ul li a:hover {
-  color: var(--primary-color);
+/* Loading state */
+.az-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 300px;
 }
 
+.az-spinner {
+  width: 50px;
+  height: 50px;
+  border: 5px solid #f3f3f3;
+  border-top: 5px solid var(--primary-color);
+  border-radius: 50%;
+  animation: az-spin 1s linear infinite;
+  margin-bottom: 20px;
+}
+
+@keyframes az-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.az-loading p {
+  color: #666;
+  font-weight: 500;
+}
+
+/* Error state */
+.az-error {
+  text-align: center;
+  padding: 60px 20px;
+}
+
+.az-error h2 {
+  color: #d32f2f;
+  margin-bottom: 15px;
+}
+
+.az-error p {
+  color: #666;
+  margin-bottom: 20px;
+}
+
+.az-retry-button {
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 4px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.az-retry-button:hover {
+  background-color: var(--secondary-color);
+}
+
+.az-empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: #666;
+}
+
+/* Responsive adjustments */
 @media (max-width: 768px) {
   .az-header h1 {
     font-size: 2rem;
   }
   
-  .az-header p {
-    font-size: 1rem;
-  }
-  
-  .az-letter-nav a {
-    width: 32px;
-    height: 32px;
-    line-height: 32px;
-    font-size: 0.9rem;
-  }
-  
   .az-letter-section h2 {
-    font-size: 1.5rem;
+    font-size: 1.8rem;
   }
   
   .az-letter-section ul {
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
   }
 }
 
-@media (max-width: 576px) {
-  .az-header {
-    padding: 30px 15px;
-  }
-  
+@media (max-width: 480px) {
   .az-header h1 {
     font-size: 1.8rem;
   }
   
-  .az-letter-nav {
-    padding: 10px;
+  .az-letter-section ul {
+    grid-template-columns: 1fr;
   }
   
   .az-letter-nav a {
-    width: 28px;
-    height: 28px;
-    line-height: 28px;
-    margin: 3px;
-    font-size: 0.8rem;
-  }
-  
-  .az-letter-section ul {
-    grid-template-columns: 1fr;
+    width: 30px;
+    height: 30px;
+    font-size: 0.9rem;
   }
 } 

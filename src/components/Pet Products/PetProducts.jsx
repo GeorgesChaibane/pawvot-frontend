@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import ProductService from '../../services/productService';
+import CartService from '../../services/cartService';
 import './PetProducts.css';
 
 const PetProducts = () => {
@@ -9,136 +11,132 @@ const PetProducts = () => {
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState('description');
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [relatedProducts, setRelatedProducts] = useState([]);
   
   useEffect(() => {
+    // Reset component state when product ID changes
+    setLoading(true);
+    setError(null);
+    setQuantity(1);
+    setActiveTab('description');
+    
     // Fetch product details
-    // In a real app, this would be an API call
-    const fetchProduct = async () => {
+    const fetchProductData = async () => {
       try {
-        // Simulate API delay
-        await new Promise(resolve => setTimeout(resolve, 800));
-        
-        // Dummy product data
-        const productData = {
-          id: productId,
-          name: 'Premium Dog Food',
-          price: 29.99,
-          description: 'High-quality premium dog food made with real chicken and vegetables. Perfect for all dog breeds and sizes. Rich in proteins and essential nutrients for a healthy diet.',
-          specifications: 'Weight: 5kg\nIngredients: Chicken, Brown Rice, Carrots, Peas\nAge: Adult dogs\nFeeding Guide: 100g per 10kg of body weight',
-          reviews: [
-            { id: 1, user: 'John D.', rating: 5, comment: 'My dog loves this food! His coat looks healthier after switching to this brand.' },
-            { id: 2, user: 'Sarah M.', rating: 4, comment: 'Good quality food, but a bit pricey.' },
-            { id: 3, user: 'Mike R.', rating: 5, comment: 'Excellent product. Will buy again!' }
-          ],
-          images: [
-            'https://source.unsplash.com/random/400x400/?dogfood',
-            'https://source.unsplash.com/random/400x400/?petfood',
-            'https://source.unsplash.com/random/400x400/?dogfood,package'
-          ],
-          inStock: true,
-          category: 'Food'
-        };
-        
+        const productData = await ProductService.getProductById(productId);
         setProduct(productData);
         
-        // Set related products
-        setRelatedProducts([
-          {
-            id: '101',
-            name: 'Dog Leash',
-            price: 15.99,
-            image: 'https://source.unsplash.com/random/200x200/?dogleash'
-          },
-          {
-            id: '102',
-            name: 'Dog Toy Bundle',
-            price: 12.99,
-            image: 'https://source.unsplash.com/random/200x200/?dogtoys'
-          },
-          {
-            id: '103',
-            name: 'Pet Shampoo',
-            price: 9.99,
-            image: 'https://source.unsplash.com/random/200x200/?petshampoo'
+        // Fetch related products of the same category
+        try {
+          if (productData.category) {
+            const categoryProducts = await ProductService.getProductsByCategory(productData.category);
+            // Filter out the current product and limit to 3 related products
+            const filtered = categoryProducts
+              .filter(p => p._id !== productId)
+              .slice(0, 3);
+              
+            setRelatedProducts(filtered);
           }
-        ]);
+        } catch (relatedError) {
+          console.error('Error fetching related products:', relatedError);
+          // Don't set the main error state, as the primary product was loaded successfully
+        }
         
         setLoading(false);
-      } catch (error) {
-        console.error('Error fetching product:', error);
+      } catch (err) {
+        console.error('Error fetching product:', err);
+        setError(err.message || 'Failed to load product details');
         setLoading(false);
       }
     };
     
-    fetchProduct();
+    fetchProductData();
   }, [productId]);
   
   const handleQuantityChange = (newQuantity) => {
-    if (newQuantity > 0 && newQuantity <= 10) {
+    // Make sure the new quantity doesn't exceed available stock
+    const maxQty = product && product.countInStock ? product.countInStock : 10;
+    if (newQuantity > 0 && newQuantity <= maxQty) {
       setQuantity(newQuantity);
     }
   };
   
   const addToCart = () => {
-    // Get current cart from localStorage
-    const currentCart = JSON.parse(localStorage.getItem('cartItems')) || [];
+    if (!product) return;
     
-    // Check if product already exists in cart
-    const existingItemIndex = currentCart.findIndex(item => item.id === product.id);
-    
-    if (existingItemIndex !== -1) {
-      // Update quantity if product already in cart
-      currentCart[existingItemIndex].quantity += quantity;
-    } else {
-      // Add new product to cart
-      currentCart.push({
-        id: product.id,
-        name: product.name,
-        price: product.price,
-        image: product.images[0],
-        quantity: quantity
-      });
-    }
-    
-    // Save updated cart to localStorage
-    localStorage.setItem('cartItems', JSON.stringify(currentCart));
+    // Use the CartService to add the product to cart
+    CartService.addToCart(product, quantity);
     
     // Navigate to shopping cart
     navigate('/cart');
+  };
+  
+  const buyNow = async () => {
+    if (!product) return;
+    
+    // Add to cart then go directly to checkout
+    const response = await CartService.addToCart(product, quantity, true);
+    
+    // Check if redirect to login is required
+    if (response.redirectRequired) {
+      // Save the return URL to redirect back after login
+      localStorage.setItem('returnUrl', `/products/${productId}`);
+      navigate('/login');
+    } else {
+      // Proceed to checkout
+      navigate('/checkout');
+    }
   };
   
   if (loading) {
     return <div className="product-loading">Loading product details...</div>;
   }
   
+  if (error) {
+    return <div className="product-error">Error: {error}</div>;
+  }
+  
   if (!product) {
     return <div className="product-error">Product not found</div>;
   }
+  
+  // Check if product is in stock
+  const inStock = product.countInStock > 0;
+  
+  // Get first image or placeholder
+  const mainImage = product.images && product.images.length > 0 
+    ? (product.images[0].startsWith('http') ? product.images[0] : 
+       product.images[0].startsWith('/') ? `http://localhost:5000${product.images[0]}` : 
+       product.images[0])
+    : 'https://via.placeholder.com/400x400?text=No+Image+Available';
   
   return (
     <div className="pet-product-container">
       <div className="product-main">
         <div className="product-images">
           <div className="main-image">
-            <img src={product.images[0]} alt={product.name} />
+            <img src={mainImage} alt={product.name} />
           </div>
-          <div className="thumbnail-images">
-            {product.images.map((image, index) => (
-              <img 
-                key={index} 
-                src={image} 
-                alt={`${product.name} view ${index + 1}`}
-                className="thumbnail" 
-                onClick={() => {
-                  // In a real app, this would change the main image
-                  const newImages = [...product.images];
-                  [newImages[0], newImages[index]] = [newImages[index], newImages[0]];
-                  setProduct({...product, images: newImages});
-                }}
-              />
-            ))}
-          </div>
+          {product.images && product.images.length > 1 && (
+            <div className="thumbnail-images">
+              {product.images.map((image, index) => (
+                <img 
+                  key={index} 
+                  src={image.startsWith('http') ? image : 
+                      image.startsWith('/') ? `http://localhost:5000${image}` : image} 
+                  alt={`${product.name} view ${index + 1}`}
+                  className="thumbnail" 
+                  onClick={() => {
+                    // Move the clicked thumbnail to main image
+                    const newImages = [...product.images];
+                    [newImages[0], newImages[index]] = [newImages[index], newImages[0]];
+                    setProduct({...product, images: newImages});
+                  }}
+                />
+              ))}
+            </div>
+          )}
         </div>
         
         <div className="product-details">
@@ -146,8 +144,8 @@ const PetProducts = () => {
           <div className="product-price">${product.price.toFixed(2)}</div>
           
           <div className="product-status">
-            {product.inStock ? (
-              <span className="in-stock">In Stock</span>
+            {inStock ? (
+              <span className="in-stock">In Stock ({product.countInStock} available)</span>
             ) : (
               <span className="out-of-stock">Out of Stock</span>
             )}
@@ -157,14 +155,14 @@ const PetProducts = () => {
             <div className="quantity-selector">
               <button 
                 onClick={() => handleQuantityChange(quantity - 1)}
-                disabled={quantity <= 1}
+                disabled={quantity <= 1 || !inStock}
               >
                 -
               </button>
               <span>{quantity}</span>
               <button 
                 onClick={() => handleQuantityChange(quantity + 1)}
-                disabled={quantity >= 10}
+                disabled={quantity >= product.countInStock || !inStock}
               >
                 +
               </button>
@@ -174,27 +172,15 @@ const PetProducts = () => {
               <button 
                 className="add-to-cart-btn-2" 
                 onClick={addToCart}
-                disabled={!product.inStock}
+                disabled={!inStock}
               >
                 Add to Cart
               </button>
               
               <button 
                 className="buy-now-btn" 
-                onClick={() => {
-                  // Add to cart then go directly to checkout
-                  const currentCart = JSON.parse(localStorage.getItem('cartItems')) || [];
-                  currentCart.push({
-                    id: product.id,
-                    name: product.name,
-                    price: product.price,
-                    image: product.images[0],
-                    quantity: quantity
-                  });
-                  localStorage.setItem('cartItems', JSON.stringify(currentCart));
-                  navigate('/checkout');
-                }}
-                disabled={!product.inStock}
+                onClick={buyNow}
+                disabled={!inStock}
               >
                 Buy Now
               </button>
@@ -213,13 +199,13 @@ const PetProducts = () => {
                 className={activeTab === 'specifications' ? 'active' : ''}
                 onClick={() => setActiveTab('specifications')}
               >
-                Specifications
+                Details
               </button>
               <button 
                 className={activeTab === 'reviews' ? 'active' : ''}
                 onClick={() => setActiveTab('reviews')}
               >
-                Reviews ({product.reviews.length})
+                Reviews ({product.reviews ? product.reviews.length : 0})
               </button>
             </div>
             
@@ -232,30 +218,46 @@ const PetProducts = () => {
               
               {activeTab === 'specifications' && (
                 <div className="specifications-tab">
-                  <pre>{product.specifications}</pre>
+                  <p><strong>Brand:</strong> {product.brand}</p>
+                  <p><strong>Category:</strong> {product.category}</p>
+                  <p><strong>Pet Type:</strong> {Array.isArray(product.petType) ? product.petType.join(', ') : product.petType}</p>
+                  {product.weight && <p><strong>Weight:</strong> {product.weight.value} {product.weight.unit}</p>}
+                  {product.dimensions && (
+                    <p>
+                      <strong>Dimensions:</strong> {product.dimensions.length} x {product.dimensions.width} x {product.dimensions.height} {product.dimensions.unit}
+                    </p>
+                  )}
+                  {product.tags && product.tags.length > 0 && (
+                    <p><strong>Tags:</strong> {product.tags.join(', ')}</p>
+                  )}
                 </div>
               )}
               
               {activeTab === 'reviews' && (
                 <div className="reviews-tab">
-                  {product.reviews.map(review => (
-                    <div key={review.id} className="review">
-                      <div className="review-header">
-                        <span className="reviewer">{review.user}</span>
-                        <div className="rating">
-                          {[...Array(5)].map((_, i) => (
-                            <span 
-                              key={i} 
-                              className={i < review.rating ? 'star filled' : 'star'}
-                            >
-                              ★
-                            </span>
-                          ))}
+                  {product.reviews && product.reviews.length > 0 ? (
+                    product.reviews.map((review, index) => (
+                      <div key={index} className="review">
+                        <div className="review-header">
+                          <span className="reviewer">{review.name}</span>
+                          <div className="rating">
+                            {[...Array(5)].map((_, i) => (
+                              <span 
+                                key={i} 
+                                className={i < review.rating ? 'star filled' : 'star'}
+                              >
+                                ★
+                              </span>
+                            ))}
+                          </div>
                         </div>
+                        <p className="review-date">{new Date(review.date).toLocaleDateString()}</p>
+                        <p className="review-comment">{review.comment}</p>
                       </div>
-                      <p className="review-comment">{review.comment}</p>
-                    </div>
-                  ))}
+                    ))
+                  ) : (
+                    <p>No reviews yet. Be the first to review this product!</p>
+                  )}
                 </div>
               )}
             </div>
@@ -265,13 +267,24 @@ const PetProducts = () => {
       
       {relatedProducts.length > 0 && (
         <div className="related-products">
-          <h2>You May Also Like</h2>
+          <h2>Related Products</h2>
           <div className="related-products-grid">
-            {relatedProducts.map(product => (
-              <div key={product.id} className="related-product" onClick={() => navigate(`/products/${product.id}`)}>
-                <img src={product.image} alt={product.name} />
-                <h3>{product.name}</h3>
-                <p className="related-price">${product.price.toFixed(2)}</p>
+            {relatedProducts.map(related => (
+              <div key={related._id} className="related-product-card" onClick={() => navigate(`/products/${related._id}`)}>
+                <div className="related-product-image">
+                  <img 
+                    src={related.images && related.images.length > 0 ? 
+                        (related.images[0].startsWith('http') ? related.images[0] : 
+                         related.images[0].startsWith('/') ? `http://localhost:5000${related.images[0]}` : 
+                         related.images[0]) 
+                        : 'https://via.placeholder.com/200x200?text=No+Image'} 
+                    alt={related.name} 
+                  />
+                </div>
+                <div className="related-product-info">
+                  <h3>{related.name}</h3>
+                  <p className="related-product-price">${related.price.toFixed(2)}</p>
+                </div>
               </div>
             ))}
           </div>

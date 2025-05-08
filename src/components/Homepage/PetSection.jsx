@@ -71,11 +71,11 @@ const PetSection = ({ searchQuery }) => {
   const [pets, setPets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [filters, setFilters] = useState({
-    type: '',
-    breed: '',
-    location: ''
-  });
+  // const [filters, setFilters] = useState({
+  //   type: '',
+  //   breed: '',
+  //   location: ''
+  // });
 
   useEffect(() => {
     const fetchPets = async () => {
@@ -95,20 +95,20 @@ const PetSection = ({ searchQuery }) => {
     fetchPets();
   }, []);
 
-  useEffect(() => {
+  /*useEffect(() => {
     let filteredPets = [...pets];
 
-    if (filters.type) {
-      filteredPets = filteredPets.filter(pet => pet.type === filters.type);
-    }
+    // if (filters.type) {
+    //   filteredPets = filteredPets.filter(pet => pet.type === filters.type);
+    // }
 
-    if (filters.breed) {
-      filteredPets = filteredPets.filter(pet => pet.breed === filters.breed);
-    }
+    // if (filters.breed) {
+    //   filteredPets = filteredPets.filter(pet => pet.breed === filters.breed);
+    // }
 
-    if (filters.location) {
-      filteredPets = filteredPets.filter(pet => pet.location === filters.location);
-    }
+    // if (filters.location) {
+    //   filteredPets = filteredPets.filter(pet => pet.location === filters.location);
+    // }
 
     if (searchQuery) {
       filteredPets = filteredPets.filter(pet => 
@@ -120,20 +120,20 @@ const PetSection = ({ searchQuery }) => {
     }
 
     setPets(filteredPets);
-  }, [filters, searchQuery]);
+  }, [filters, searchQuery]);*/
 
-  const handleFilterChange = (e) => {
-    const { name, value } = e.target;
-    setFilters(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
+  // const handleFilterChange = (e) => {
+  //   const { name, value } = e.target;
+  //   setFilters(prev => ({
+  //     ...prev,
+  //     [name]: value
+  //   }));
+  // };
 
   // Extract unique values for filter dropdowns
-  const petTypes = [...new Set(pets.map(pet => pet.type))];
-  const petBreeds = [...new Set(pets.map(pet => pet.breed))];
-  const locations = [...new Set(pets.map(pet => pet.location))];
+  // const petTypes = [...new Set(pets.map(pet => pet.type))];
+  // const petBreeds = [...new Set(pets.map(pet => pet.breed))];
+  // const locations = [...new Set(pets.map(pet => pet.location))];
 
   if (loading) return <div className="loading">Loading pets...</div>;
   if (error) return <div className="error">{error}</div>;

@@ -14,7 +14,7 @@ const Payment = () => {
     expiryDate: '',
     cvv: ''
   });
-  const [error, setError] = useState('');
+  const [/*error,*/ setError] = useState('');
   
   useEffect(() => {
     // Get order details from local storage

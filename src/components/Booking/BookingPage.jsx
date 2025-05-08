@@ -1,33 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link, /*useNavigate*/ } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import PetService from '../../services/petService';
+import BookingService from '../../services/bookingService';
+import { useAuth } from '../../context/AuthContext';
 import './BookingPage.css';
-
-// Import placeholder data (in a real app, this would come from an API)
-const DUMMY_PETS = [
-  {
-    id: 'pet1',
-    name: 'Max',
-    type: 'Dog',
-    breed: 'Golden Retriever',
-    image: '/path/to/dog1-1.jpg',
-    location: 'Pet Zone, Beirut',
-  },
-  {
-    id: 'pet2',
-    name: 'Luna',
-    type: 'Cat',
-    breed: 'Persian',
-    image: '/path/to/cat1-1.jpg',
-    location: 'Pegasus Pets Shop, Jounieh',
-  }
-];
 
 const BookingPage = () => {
   const { petId } = useParams();
   const [pet, setPet] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [bookingSuccess, setBookingSuccess] = useState(false);
-  //const navigate = useNavigate();
+  const [availableTimeSlots, setAvailableTimeSlots] = useState([]);
+  const navigate = useNavigate();
+  const { currentUser, isAuthenticated } = useAuth();
   
   const [formData, setFormData] = useState({
     date: '',
@@ -39,19 +25,74 @@ const BookingPage = () => {
   });
 
   useEffect(() => {
-    // In a real app, this would be an API call
-    const fetchPet = () => {
-      setLoading(true);
-      // Simulate API delay
-      setTimeout(() => {
-        const foundPet = DUMMY_PETS.find(p => p.id === petId);
-        setPet(foundPet || null);
+    // Check authentication
+    if (!isAuthenticated) {
+      // Save the return URL
+      localStorage.setItem('returnUrl', `/pets/${petId}/book`);
+      navigate('/login');
+      return;
+    }
+
+    // Update form with user data when available
+    if (currentUser) {
+      setFormData(prevState => ({
+        ...prevState,
+        name: currentUser.firstName && currentUser.lastName ? 
+          `${currentUser.firstName} ${currentUser.lastName}` : '',
+        email: currentUser.email || ''
+      }));
+    }
+
+    // Fetch pet from API
+    const fetchPet = async () => {
+      try {
+        setLoading(true);
+        const petData = await PetService.getPetById(petId);
+        
+        if (petData) {
+          // Process the pet data
+          const processedPet = {
+            ...petData,
+            image: petData.image ? 
+              (petData.image.startsWith('http') ? petData.image : 
+               petData.image.startsWith('/') ? `http://localhost:5000${petData.image}` : 
+               petData.image) : 
+              'https://via.placeholder.com/300x300?text=No+Image'
+          };
+          
+          setPet(processedPet);
+        } else {
+          setError('Pet not found');
+        }
+      } catch (err) {
+        console.error('Error fetching pet:', err);
+        setError(err.message || 'Failed to fetch pet details');
+      } finally {
         setLoading(false);
-      }, 500);
+      }
     };
 
     fetchPet();
-  }, [petId]);
+  }, [petId, navigate, isAuthenticated, currentUser]);
+
+  // When date changes, fetch available time slots
+  useEffect(() => {
+    if (formData.date && pet) {
+      const fetchTimeSlots = async () => {
+        try {
+          const slots = await BookingService.getAvailableTimeSlots(petId, formData.date);
+          setAvailableTimeSlots(slots);
+        } catch (err) {
+          console.error('Error fetching time slots:', err);
+          setAvailableTimeSlots([]);
+        }
+      };
+      
+      fetchTimeSlots();
+    } else {
+      setAvailableTimeSlots([]);
+    }
+  }, [formData.date, petId, pet]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -61,26 +102,50 @@ const BookingPage = () => {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // In a real app, this would make an API call to save the booking
-    console.log('Booking submitted:', { pet: petId, ...formData });
-    
-    // Simulate successful booking
-    setTimeout(() => {
+    try {
+      setLoading(true);
+      
+      // Prepare date and time
+      const dateTime = new Date(formData.date);
+      const [hours, minutes] = formData.time.split(':').map(Number);
+      const isPM = formData.time.includes('PM');
+      
+      // Set hours (convert from 12-hour to 24-hour format if PM)
+      dateTime.setHours(
+        isPM && hours !== 12 ? hours + 12 : (hours === 12 && !isPM ? 0 : hours)
+      );
+      dateTime.setMinutes(minutes || 0);
+      
+      // Create booking data
+      const bookingData = {
+        petId,
+        bookingDate: dateTime.toISOString(),
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        message: formData.message
+      };
+      
+      // Submit booking
+      await BookingService.createBooking(bookingData);
+      
+      // Show success state
       setBookingSuccess(true);
-    }, 1000);
-  };
-
-  // Generate available time slots for the selected date
-  const getAvailableTimeSlots = () => {
-    return [
-      '10:00 AM', '10:30 AM', '11:00 AM', '11:30 AM',
-      '12:00 PM', '12:30 PM', '1:00 PM', '1:30 PM',
-      '2:00 PM', '2:30 PM', '3:00 PM', '3:30 PM',
-      '4:00 PM', '4:30 PM'
-    ];
+    } catch (err) {
+      console.error('Error creating booking:', err);
+      
+      // Handle specific error types
+      if (err.response && err.response.status === 409) {
+        setError('This time slot is no longer available. Please select a different time.');
+      } else {
+        setError('Failed to book appointment. Please try again.');
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Get min date (today) for date picker
@@ -96,7 +161,7 @@ const BookingPage = () => {
     return maxDate.toISOString().split('T')[0];
   };
 
-  if (loading) {
+  if (loading && !pet) {
     return (
       <div className="booking-loading">
         <div className="loading-spinner"></div>
@@ -105,11 +170,11 @@ const BookingPage = () => {
     );
   }
 
-  if (!pet) {
+  if (error && !pet) {
     return (
       <div className="pet-not-found">
         <h2>Pet Not Found</h2>
-        <p>We couldn't find the pet you're looking for.</p>
+        <p>{error || "We couldn't find the pet you're looking for."}</p>
         <Link to="/pets" className="back-to-pets-btn">Browse All Pets</Link>
       </div>
     );
@@ -135,7 +200,7 @@ const BookingPage = () => {
         <div className="booking-header">
           <Link to={`/pets/${petId}`} className="back-link">&#8592; Back to Pet Profile</Link>
           <h1>Schedule a Meet & Greet</h1>
-          <p>Book a time to meet {pet.name} at {pet.location}</p>
+          <p>Book a time to meet {pet.name} at {pet.location || 'our center'}</p>
         </div>
 
         <div className="booking-content">
@@ -146,9 +211,15 @@ const BookingPage = () => {
             <div className="pet-info">
               <h2>{pet.name}</h2>
               <p>{pet.breed} • {pet.type}</p>
-              <p className="pet-location">{pet.location}</p>
+              <p className="pet-location">{pet.location || 'Pet Adoption Center'}</p>
             </div>
           </div>
+
+          {error && (
+            <div className="booking-error">
+              <p>{error}</p>
+            </div>
+          )}
 
           <form className="booking-form" onSubmit={handleSubmit}>
             <div className="form-row">
@@ -163,6 +234,7 @@ const BookingPage = () => {
                   min={getMinDate()}
                   max={getMaxDate()}
                   required
+                  disabled={loading}
                 />
               </div>
 
@@ -174,12 +246,16 @@ const BookingPage = () => {
                   value={formData.time}
                   onChange={handleChange}
                   required
-                  disabled={!formData.date}
+                  disabled={!formData.date || availableTimeSlots.length === 0 || loading}
                 >
                   <option value="">Select a time</option>
-                  {formData.date && getAvailableTimeSlots().map(time => (
-                    <option key={time} value={time}>{time}</option>
-                  ))}
+                  {formData.date && availableTimeSlots.length > 0 ? (
+                    availableTimeSlots.map(time => (
+                      <option key={time} value={time}>{time}</option>
+                    ))
+                  ) : formData.date ? (
+                    <option value="" disabled>No available times on this date</option>
+                  ) : null}
                 </select>
               </div>
             </div>
@@ -195,6 +271,7 @@ const BookingPage = () => {
                   onChange={handleChange}
                   placeholder="Enter your full name"
                   required
+                  disabled={loading}
                 />
               </div>
 
@@ -208,6 +285,7 @@ const BookingPage = () => {
                   onChange={handleChange}
                   placeholder="Enter your email"
                   required
+                  disabled={loading}
                 />
               </div>
             </div>
@@ -222,6 +300,7 @@ const BookingPage = () => {
                 onChange={handleChange}
                 placeholder="Enter your phone number"
                 required
+                disabled={loading}
               />
             </div>
 
@@ -234,11 +313,16 @@ const BookingPage = () => {
                 onChange={handleChange}
                 placeholder="Any questions or special requests?"
                 rows="3"
+                disabled={loading}
               ></textarea>
             </div>
 
-            <button type="submit" className="submit-booking-btn">
-              Confirm Booking
+            <button 
+              type="submit" 
+              className="submit-booking-btn"
+              disabled={loading || !formData.date || !formData.time}
+            >
+              {loading ? "Submitting..." : "Confirm Booking"}
             </button>
           </form>
 
@@ -249,6 +333,7 @@ const BookingPage = () => {
           </div>
         </div>
       </div>
+      <div className="page-footer-spacer"></div>
     </div>
   );
 };

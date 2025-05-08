@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import './OrderDetail.css';
+import OrderService from '../../services/orderService';
 
 const OrderDetail = () => {
   const { orderId } = useParams();
@@ -8,38 +9,39 @@ const OrderDetail = () => {
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [isAuthenticated/*, setIsAuthenticated*/] = useState(true);
 
   useEffect(() => {
     const fetchOrderDetails = async () => {
       try {
+        if (!isAuthenticated) {
+          return;
+        }
+        
         if (!orderId) {
           setError('Order ID is missing');
           setLoading(false);
           return;
         }
         
-        const response = await fetch(`/api/orders/${orderId}`, {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-          }
-        });
+        const orderData = await OrderService.getOrderById(orderId);
         
-        if (!response.ok) {
-          throw new Error('Failed to fetch order details');
+        if (!orderData || typeof orderData !== 'object') {
+          throw new Error('Invalid order data received');
         }
         
-        const orderData = await response.json();
         setOrder(orderData);
-        setLoading(false);
+        setError(null);
       } catch (err) {
         console.error('Error fetching order:', err);
-        setError('Failed to load order details');
+        setError('Failed to load order details. Please try again.');
+      } finally {
         setLoading(false);
       }
     };
     
     fetchOrderDetails();
-  }, [orderId]);
+  }, [orderId, isAuthenticated]);
 
   // Handle cancel order
   const handleCancelOrder = async () => {
@@ -161,13 +163,13 @@ const OrderDetail = () => {
         <div className="order-items">
           <h3>Items Ordered</h3>
           <div className="items-list">
-            {order.orderItems.map((item, index) => (
+            {order.items?.map((item, index) => (
               <div key={index} className="order-item">
                 <div className="item-image">
-                  <img src={item.image} alt={item.name} />
+                  <img src={item.product?.images?.[0] || item.image || 'https://via.placeholder.com/80'} alt={item.product?.name || item.name || 'Product'} />
                 </div>
                 <div className="item-info">
-                  <h4>{item.name}</h4>
+                  <h4>{item.product?.name || item.name || 'Product'}</h4>
                   <p className="item-price">${parseFloat(item.price).toFixed(2)}</p>
                   <p className="item-quantity">Quantity: {item.quantity}</p>
                 </div>
@@ -184,19 +186,19 @@ const OrderDetail = () => {
           <div className="order-summary-details">
             <div className="summary-row">
               <span>Subtotal:</span>
-              <span>${parseFloat(order.itemsPrice).toFixed(2)}</span>
+              <span>${parseFloat(order.itemsPrice || order.subtotal || 0).toFixed(2)}</span>
             </div>
             <div className="summary-row">
               <span>Shipping:</span>
-              <span>${parseFloat(order.shippingPrice).toFixed(2)}</span>
+              <span>${parseFloat(order.shippingPrice || order.shippingCost || 0).toFixed(2)}</span>
             </div>
             <div className="summary-row">
               <span>Tax:</span>
-              <span>${parseFloat(order.taxPrice).toFixed(2)}</span>
+              <span>${parseFloat(order.taxPrice || order.tax || 0).toFixed(2)}</span>
             </div>
             <div className="summary-row total">
               <span>Total:</span>
-              <span>${parseFloat(order.totalPrice).toFixed(2)}</span>
+              <span>${parseFloat(order.totalPrice || 0).toFixed(2)}</span>
             </div>
           </div>
         </div>
@@ -205,12 +207,18 @@ const OrderDetail = () => {
       <div className="order-info-grid">
         <div className="shipping-info">
           <h3>Shipping Information</h3>
-          <p><strong>Name:</strong> {order.shippingAddress.fullName}</p>
-          <p><strong>Address:</strong> {order.shippingAddress.address}</p>
-          <p><strong>City:</strong> {order.shippingAddress.city}</p>
-          <p><strong>Postal Code:</strong> {order.shippingAddress.postalCode}</p>
-          <p><strong>Country:</strong> {order.shippingAddress.country}</p>
-          <p><strong>Phone:</strong> {order.shippingAddress.phoneNumber}</p>
+          {order.shippingAddress ? (
+            <>
+              <p><strong>Name:</strong> {order.shippingAddress.fullName || `${order.shippingAddress.firstName || ''} ${order.shippingAddress.lastName || ''}`}</p>
+              <p><strong>Address:</strong> {order.shippingAddress.address}</p>
+              <p><strong>City:</strong> {order.shippingAddress.city}</p>
+              <p><strong>Postal Code:</strong> {order.shippingAddress.postalCode || order.shippingAddress.zipCode}</p>
+              <p><strong>Country:</strong> {order.shippingAddress.country || order.shippingAddress.state}</p>
+              <p><strong>Phone:</strong> {order.shippingAddress.phoneNumber || order.shippingAddress.phone}</p>
+            </>
+          ) : (
+            <p>No shipping information available</p>
+          )}
         </div>
 
         <div className="payment-info">

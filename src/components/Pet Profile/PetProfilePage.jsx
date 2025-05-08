@@ -1,73 +1,73 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
+import PetService from '../../services/petService';
 import './PetProfilePage.css';
-
-// Import placeholder data (in a real app, this would come from an API)
-const DUMMY_PETS = [
-  {
-    id: 'pet1',
-    name: 'Max',
-    type: 'Dog',
-    breed: 'Golden Retriever',
-    age: 2,
-    gender: 'Male',
-    size: 'Large',
-    weight: '30 kg',
-    color: 'Golden',
-    location: 'Pet Zone, Beirut',
-    healthStatus: 'Vaccinated, Neutered',
-    temperament: 'Friendly, Playful, Good with kids',
-    description: 'Max is a friendly and playful Golden Retriever looking for an active family. He loves to run and play fetch in the park. He\'s great with children and gets along well with other dogs. Max has been trained for basic commands and is house-trained.',
-    images: [
-      '/path/to/dog1-1.jpg',
-      '/path/to/dog1-2.jpg',
-      '/path/to/dog1-3.jpg',
-    ],
-    backstory: 'Max was found wandering near a park in Beirut. He was taken in by our shelter and has been with us for 3 months. He\'s in excellent health and ready to find his forever home.'
-  },
-  {
-    id: 'pet2',
-    name: 'Luna',
-    type: 'Cat',
-    breed: 'Persian',
-    age: 1,
-    gender: 'Female',
-    size: 'Medium',
-    weight: '4 kg',
-    color: 'White',
-    location: 'Pegasus Pets Shop, Jounieh',
-    healthStatus: 'Vaccinated, Spayed',
-    temperament: 'Calm, Affectionate, Independent',
-    description: 'Luna is a sweet Persian cat that loves to cuddle and play with toys. She enjoys lounging in sunny spots and watching birds through the window. Luna is litter-trained and well-behaved.',
-    images: [
-      '/path/to/cat1-1.jpg',
-      '/path/to/cat1-2.jpg',
-      '/path/to/cat1-3.jpg',
-    ],
-    backstory: 'Luna was surrendered by her previous owner who could no longer care for her due to moving abroad. She\'s a healthy and beautiful cat looking for a loving home.'
-  }
-];
 
 const PetProfilePage = () => {
   const { petId } = useParams();
   const [pet, setPet] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState(0);
+  const [error, setError] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    // In a real app, this would be an API call
-    const fetchPet = () => {
-      setLoading(true);
-      // Simulate API delay
-      setTimeout(() => {
-        const foundPet = DUMMY_PETS.find(p => p.id === petId);
-        setPet(foundPet || null);
+    // Fetch pet from API
+    const fetchPet = async () => {
+      try {
+        setLoading(true);
+        const petData = await PetService.getPetById(petId);
+        
+        // Process the pet data
+        if (petData) {
+          // Format pet image path
+          const processedPet = {
+            ...petData,
+            image: petData.image ? 
+              (petData.image.startsWith('http') ? petData.image : 
+               petData.image.startsWith('/') ? `http://localhost:5000${petData.image}` : 
+               petData.image) : 
+              'https://via.placeholder.com/300x300?text=No+Image',
+            // Create array of images (in real implementation, this would be from petData.images)
+            images: [
+              petData.image ? 
+                (petData.image.startsWith('http') ? petData.image : 
+                 petData.image.startsWith('/') ? `http://localhost:5000${petData.image}` : 
+                 petData.image) : 
+                'https://via.placeholder.com/300x300?text=No+Image'
+            ],
+            temperament: petData.temperament || 'Friendly, Playful',
+            healthStatus: 'Vaccinated, Neutered',
+            backstory: petData.description || 'No backstory available',
+            size: petData.breed ? (petData.breed.includes('Small') ? 'Small' : 
+                                petData.breed.includes('Miniature') ? 'Small' :
+                                petData.breed.includes('Large') ? 'Large' : 'Medium') : 'Medium',
+            weight: petData.breed ? (petData.breed.includes('Small') ? '5-10 kg' : 
+                                  petData.breed.includes('Miniature') ? '3-5 kg' :
+                                  petData.breed.includes('Large') ? '25-40 kg' : '10-25 kg') : '10-20 kg',
+            color: petData.breed ? (petData.breed.includes('White') ? 'White' :
+                                 petData.breed.includes('Black') ? 'Black' :
+                                 petData.breed.includes('Golden') ? 'Golden' : 'Mixed') : 'Mixed',
+            gender: Math.random() > 0.5 ? 'Male' : 'Female' // Random gender for now
+          };
+          
+          setPet(processedPet);
+        } else {
+          setPet(null);
+          setError('Pet not found');
+        }
+        
         setLoading(false);
-      }, 500);
+      } catch (err) {
+        console.error('Error fetching pet:', err);
+        setError(err.message || 'Failed to fetch pet details');
+        setLoading(false);
+      }
     };
 
-    fetchPet();
+    if (petId) {
+      fetchPet();
+    }
   }, [petId]);
 
   if (loading) {
@@ -79,18 +79,28 @@ const PetProfilePage = () => {
     );
   }
 
-  if (!pet) {
+  if (error || !pet) {
     return (
       <div className="pet-not-found">
         <h2>Pet Not Found</h2>
-        <p>We couldn't find the pet you're looking for.</p>
+        <p>{error || "We couldn't find the pet you're looking for."}</p>
         <Link to="/pets" className="back-to-pets-btn">Browse All Pets</Link>
       </div>
     );
   }
 
   const handleAdoptClick = () => {
-    navigate(`/pets/${petId}/book`);
+    // Check if user is authenticated by looking for token
+    const token = localStorage.getItem('token');
+    
+    if (!token) {
+      // Save the current path to redirect back after login
+      localStorage.setItem('returnUrl', `/pets/${petId}/book`);
+      navigate('/login');
+    } else {
+      // User is authenticated, proceed to booking
+      navigate(`/pets/${petId}/book`);
+    }
   };
 
   return (
@@ -115,17 +125,19 @@ const PetProfilePage = () => {
                 alt={`${pet.name} main view`} 
               />
             </div>
-            <div className="pet-thumbnails">
-              {pet.images.map((image, index) => (
-                <div 
-                  key={index}
-                  className={`pet-thumbnail ${selectedImage === index ? 'active' : ''}`}
-                  onClick={() => setSelectedImage(index)}
-                >
-                  <img src={image} alt={`${pet.name} thumbnail ${index + 1}`} />
-                </div>
-              ))}
-            </div>
+            {pet.images.length > 1 && (
+              <div className="pet-thumbnails">
+                {pet.images.map((image, index) => (
+                  <div 
+                    key={index}
+                    className={`pet-thumbnail ${selectedImage === index ? 'active' : ''}`}
+                    onClick={() => setSelectedImage(index)}
+                  >
+                    <img src={image} alt={`${pet.name} thumbnail ${index + 1}`} />
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           <div className="pet-details-container">
@@ -178,16 +190,9 @@ const PetProfilePage = () => {
               <p>{pet.backstory}</p>
             </div>
 
-            <div className="pet-adoption-cta">
-              <button 
-                className="adopt-now-btn"
-                onClick={handleAdoptClick}
-              >
-                Schedule a Meet & Greet
-              </button>
-              <p className="adoption-info">
-                Want to meet {pet.name}? Schedule a time to visit {pet.gender === 'Male' ? 'him' : 'her'} at {pet.location}.
-              </p>
+            <div className="pet-adoption-actions">
+              <button className="adopt-now-btn" onClick={handleAdoptClick}>Book Adoption Visit</button>
+              {/* <button className="favorite-btn">Add to Favorites</button> */}
             </div>
           </div>
         </div>

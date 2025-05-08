@@ -1,4 +1,4 @@
-.checkout-container {
+/*.checkout-container {
   max-width: 1200px;
   margin: 40px auto;
   padding: 0 20px;
@@ -44,7 +44,6 @@
   border-bottom: 1px solid #ddd;
 }
 
-/* Cart Items List */
 .cart-items-list {
   margin-bottom: 20px;
 }
@@ -78,7 +77,6 @@
   color: #e63946;
 }
 
-/* Price Summary */
 .price-summary {
   margin-top: 20px;
 }
@@ -98,7 +96,6 @@
   color: #e63946;
 }
 
-/* Form Styling */
 .form-group {
   margin-bottom: 20px;
 }
@@ -138,7 +135,6 @@ input[type="tel"]:focus {
   box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
 }
 
-/* Payment Method */
 .payment-options {
   display: flex;
   flex-direction: column;
@@ -162,7 +158,6 @@ input[type="tel"]:focus {
   cursor: pointer;
 }
 
-/* Submit Button */
 .proceed-btn {
   display: block;
   width: 100%;
@@ -182,7 +177,6 @@ input[type="tel"]:focus {
   background-color: #d42836;
 }
 
-/* Responsive Styles */
 @media (max-width: 992px) {
   .checkout-content {
     flex-direction: column;
@@ -206,4 +200,4 @@ input[type="tel"]:focus {
   .checkout-container h1 {
     font-size: 1.8rem;
   }
-} 
+} */

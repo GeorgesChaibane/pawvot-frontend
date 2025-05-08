@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import CartService from '../services/cartService';
+import SearchService from '../services/searchService';
 import logoImage from '../assets/images/pawvot-logo-removebg-preview.png';
 import searchIcon from '../assets/images/search-nav.png';
 import './navbar.css';
@@ -8,7 +11,10 @@ const Navbar = ({ onSearch }) => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
-    const [cartItems, setCartItems] = useState([]);
+    const [cartItemCount, setCartItemCount] = useState(0);
+    const [isSearching, setIsSearching] = useState(false);
+    const { currentUser, logout } = useAuth();
+    const navigate = useNavigate();
 
     useEffect(() => {
         const handleResize = () => {
@@ -23,34 +29,58 @@ const Navbar = ({ onSearch }) => {
     }, []);
 
     useEffect(() => {
-        const getCartItems = () => {
-            const items = JSON.parse(localStorage.getItem('cartItems')) || [];
-            setCartItems(items);
-        };
-
-        getCartItems();
+        // Get initial cart count
+        updateCartCount();
         
         // Listen for storage events to update cart count when cart changes
-        const handleStorageChange = (e) => {
-            if (e.key === 'cartItems') {
-                getCartItems();
-            }
+        const handleStorageChange = () => {
+            updateCartCount();
         };
 
         window.addEventListener('storage', handleStorageChange);
         
-        // Check cart every 2 seconds as a fallback
-        const interval = setInterval(getCartItems, 2000);
-        
+        // We don't need to poll anymore since we're using the proper events
         return () => {
             window.removeEventListener('storage', handleStorageChange);
-            clearInterval(interval);
         };
     }, []);
 
-    const handleSubmit = (e) => {
+    const updateCartCount = () => {
+        setCartItemCount(CartService.getCartItemCount());
+    };
+
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        if (onSearch) onSearch(searchQuery);
+        
+        if (!searchQuery.trim()) return;
+        
+        try {
+            setIsSearching(true);
+            
+            // Use the advanced search service
+            const results = await SearchService.search(searchQuery);
+            
+            // Navigate based on search response type
+            if (results.responseType === 'pets') {
+                navigate(`/pets?search=${encodeURIComponent(searchQuery)}`);
+            } else if (results.responseType === 'products') {
+                navigate(`/products?search=${encodeURIComponent(searchQuery)}`);
+            } else {
+                // Mixed results - favor products as default
+                navigate(`/products?search=${encodeURIComponent(searchQuery)}`);
+            }
+            
+            // Clear search input after submitting
+            setSearchQuery('');
+            closeMenu();
+            
+        } catch (error) {
+            console.error('Search error:', error);
+            // Fallback to default behavior if API fails
+            navigate(`/products?search=${encodeURIComponent(searchQuery)}`);
+        } finally {
+            setIsSearching(false);
+        }
     };
 
     const toggleMenu = () => {
@@ -61,8 +91,11 @@ const Navbar = ({ onSearch }) => {
         setIsMenuOpen(false);
     };
 
-    // Calculate total number of items in cart
-    const cartItemCount = cartItems.reduce((total, item) => total + item.quantity, 0);
+    const handleLogout = () => {
+        logout();
+        navigate('/');
+        closeMenu();
+    };
 
     return (
         <header>
@@ -79,9 +112,16 @@ const Navbar = ({ onSearch }) => {
                                 placeholder="Search by breed, product, or city"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
+                                disabled={isSearching}
                             />
                         </div>
-                        <button type="submit" className="search-button">Search</button>
+                        <button 
+                            type="submit" 
+                            className="search-button" 
+                            disabled={isSearching}
+                        >
+                            {isSearching ? 'Searching...' : 'Search'}
+                        </button>
                     </form>
                 </div>
                 
@@ -98,11 +138,11 @@ const Navbar = ({ onSearch }) => {
                                 <li><Link to="/pets" onClick={closeMenu}>Adopt</Link></li>
                                 <li><Link to="/products" onClick={closeMenu}>Shop</Link></li>
                                 <li><Link to="/bookings" onClick={closeMenu}>Bookings</Link></li>
-                                <li><Link to="/account/orders" onClick={closeMenu}>Orders</Link></li>
+                                <li><Link to="/orders" onClick={closeMenu}>Orders</Link></li>
                                 <li>
                                     <Link to="/cart" onClick={closeMenu} className="cart-link">
                                         <span className="cart-icon">🛒</span> 
-                                        Cart
+                                        
                                         {cartItemCount > 0 && (
                                             <span className="cart-count">{cartItemCount}</span>
                                         )}
@@ -110,8 +150,21 @@ const Navbar = ({ onSearch }) => {
                                 </li>
                                 {isMobile && (
                                     <>
-                                        <li><Link to="/signup" onClick={closeMenu}>Signup</Link></li>
-                                        <li><Link to="/login" onClick={closeMenu}>Login</Link></li>
+                                        {!currentUser ? (
+                                            <>
+                                                <li><Link to="/signup" onClick={closeMenu}>Signup</Link></li>
+                                                <li><Link to="/login" onClick={closeMenu}>Login</Link></li>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <li>
+                                                    <span className="user-name">{currentUser.name}</span>
+                                                </li>
+                                                <li>
+                                                    <button onClick={handleLogout} className="logout-link">Logout</button>
+                                                </li>
+                                            </>
+                                        )}
                                     </>
                                 )}
                             </ul>
@@ -119,8 +172,17 @@ const Navbar = ({ onSearch }) => {
                         
                         {!isMobile && (
                             <div className="auth-buttons">
-                                <Link to="/signup" className="login-signup">Signup</Link>
-                                <Link to="/login" className="login-signup">Login</Link>
+                                {!currentUser ? (
+                                    <>
+                                        <Link to="/signup" className="login-signup">Signup</Link>
+                                        <Link to="/login" className="login-signup">Login</Link>
+                                    </>
+                                ) : (
+                                    <>
+                                        <span className="user-name">{currentUser.name}</span>
+                                        <Link to="/" onClick={handleLogout} className="login-signup">Logout</Link>
+                                    </>
+                                )}
                             </div>
                         )}
                     </div>

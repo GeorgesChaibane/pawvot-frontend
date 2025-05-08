@@ -1,59 +1,82 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import PetService from '../../services/petService';
+import axios from 'axios';
 import './AllPetsPage.css';
 
 const AllPetsPage = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
+  
+  // Query parameters from URL
+  const queryParams = new URLSearchParams(location.search);
+  const initialSearchQuery = queryParams.get('search') || '';
+  const initialType = queryParams.get('type') || '';
+  const initialBreed = queryParams.get('breed') || '';
+  const initialLocation = queryParams.get('location') || '';
+  const initialPage = parseInt(queryParams.get('page')) || 1;
+  
   const [pets, setPets] = useState([]);
   const [filteredPets, setFilteredPets] = useState([]);
   const [filters, setFilters] = useState({
-    type: '',
-    breed: '',
+    type: initialType,
+    breed: initialBreed,
     age: '',
     gender: '',
-    location: ''
+    location: initialLocation
   });
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState(initialSearchQuery);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(initialPage);
+  const [petsPerPage] = useState(9);
+  const [totalPages, setTotalPages] = useState(1);
 
   useEffect(() => {
     // Fetch pets from API
     const fetchPets = async () => {
       try {
         setLoading(true);
-        const response = await fetch('/api/pets/all');
+        let data;
         
-        if (!response.ok) {
-          throw new Error('Failed to fetch pets');
+        if (searchQuery) {
+          // Use search endpoint properly
+          const response = await axios.get(`http://localhost:5000/api/pets/search?query=${searchQuery}`);
+          data = response.data;
+        } else {
+          data = await PetService.getAllPetsPage();
         }
-        
-        const data = await response.json();
         
         // Add gender field (not in API but needed for filtering)
         const petsWithGender = data.map(pet => ({
           ...pet,
           gender: Math.random() > 0.5 ? 'Male' : 'Female', // Random gender assignment
-          age: typeof pet.age === 'string' ? parseInt(pet.age) || 1 : pet.age // Ensure age is a number
+          age: typeof pet.age === 'string' ? parseInt(pet.age) || 1 : pet.age, // Ensure age is a number
+          // Ensure image has correct path
+          image: pet.image ? 
+            (pet.image.startsWith('http') ? pet.image : 
+             pet.image.startsWith('/') ? `http://localhost:5000${pet.image}` : 
+             pet.image) 
+            : 'https://via.placeholder.com/300x300?text=Pet+Image'
         }));
         
+        console.log('Fetched pets:', petsWithGender);
         setPets(petsWithGender);
-        setFilteredPets(petsWithGender);
         setLoading(false);
       } catch (error) {
         console.error('Error fetching pets:', error);
-        setError(error.message);
+        setError(error.message || 'Failed to fetch pets');
         setLoading(false);
       }
     };
     
     fetchPets();
-  }, []);
+  }, [searchQuery]);
 
   useEffect(() => {
-    applyFilters();
-  }, [filters, searchQuery, pets]);
-
-  const applyFilters = () => {
+    // Apply filters and calculate pagination
     let filtered = [...pets];
 
     // Apply search query
@@ -89,9 +112,29 @@ const AllPetsPage = () => {
     if (filters.location) {
       filtered = filtered.filter(pet => pet.location.includes(filters.location));
     }
-
+    
+    // Calculate total pages
+    setTotalPages(Math.ceil(filtered.length / petsPerPage));
+    
+    // Adjust currentPage if it's out of bounds
+    if (currentPage > Math.ceil(filtered.length / petsPerPage) && filtered.length > 0) {
+      setCurrentPage(1);
+    }
+    
     setFilteredPets(filtered);
-  };
+    
+    // Update URL with query parameters
+    const newParams = new URLSearchParams();
+    if (searchQuery) newParams.set('search', searchQuery);
+    if (filters.type) newParams.set('type', filters.type);
+    if (filters.breed) newParams.set('breed', filters.breed);
+    if (filters.location) newParams.set('location', filters.location);
+    if (currentPage > 1) newParams.set('page', currentPage.toString());
+    
+    const newUrl = `${location.pathname}${newParams.toString() ? `?${newParams.toString()}` : ''}`;
+    navigate(newUrl, { replace: true });
+    
+  }, [filters, searchQuery, pets, currentPage, petsPerPage, navigate, location.pathname]);
 
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
@@ -99,7 +142,16 @@ const AllPetsPage = () => {
       ...prevFilters,
       [name]: value
     }));
+    
+    // Reset to first page when filter changes
+    setCurrentPage(1);
   };
+
+  // const handleSearchSubmit = (e) => {
+  //   e.preventDefault();
+  //   // Reset to first page when searching
+  //   setCurrentPage(1);
+  // };
 
   const clearFilters = () => {
     setFilters({
@@ -110,6 +162,7 @@ const AllPetsPage = () => {
       location: ''
     });
     setSearchQuery('');
+    setCurrentPage(1);
   };
 
   // Extract unique values for filter dropdowns
@@ -119,6 +172,27 @@ const AllPetsPage = () => {
     const [shop] = pet.location ? pet.location.split(',') : ['Unknown'];
     return shop.trim();
   }))];
+  
+  // Get current pets for pagination
+  const indexOfLastPet = currentPage * petsPerPage;
+  const indexOfFirstPet = indexOfLastPet - petsPerPage;
+  const currentPets = filteredPets.slice(indexOfFirstPet, indexOfLastPet);
+  
+  // Change page
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
+  
+  // Next and previous page navigation
+  const goToPreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+  
+  const goToNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
 
   if (loading) {
     return <div className="pets-loading">Loading pets...</div>;
@@ -141,17 +215,6 @@ const AllPetsPage = () => {
             <h2>Filter Pets</h2>
             <button className="clear-filters-btn" onClick={clearFilters}>Clear All</button>
           </div>
-
-          {/* <div className="filter-section">
-            <label htmlFor="searchQuery">Search</label>
-            <input
-              type="text"
-              id="searchQuery"
-              placeholder="Search pets..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div> */}
 
           <div className="filter-section">
             <label htmlFor="type">Pet Type</label>
@@ -231,7 +294,7 @@ const AllPetsPage = () => {
 
         <div className="pets-grid-container">
           <div className="pets-count">
-            <p>Showing {filteredPets.length} pet{filteredPets.length !== 1 ? 's' : ''}</p>
+            <p>Showing {indexOfFirstPet+1}-{Math.min(indexOfLastPet, filteredPets.length)} of {filteredPets.length} pet{filteredPets.length !== 1 ? 's' : ''}</p>
           </div>
 
           {filteredPets.length === 0 ? (
@@ -240,22 +303,79 @@ const AllPetsPage = () => {
               <button className="clear-filters-btn" onClick={clearFilters}>Clear Filters</button>
             </div>
           ) : (
-            <div className="pets-grid">
-              {filteredPets.map(pet => (
-                <div key={pet._id} className="pet-card">
-                  <div className="pet-image">
-                    <img src={pet.image} alt={pet.name} />
+            <>
+              <div className="pets-grid">
+                {currentPets.map(pet => (
+                  <div key={pet._id} className="pet-card">
+                    <div className="pet-image-all-pets">
+                      <img src={pet.image} alt={pet.name} />
+                    </div>
+                    <div className="pet-info-all-pets">
+                      <h3>{pet.name}</h3>
+                      <p className="pet-breed">{pet.breed}</p>
+                      <p className="pet-age-gender">{pet.age} {pet.age === 1 ? 'year' : 'years'} • {pet.gender}</p>
+                      <p className="pet-location">{pet.location}</p>
+                      <Link to={`/pets/${pet._id}`} className="view-pet-btn">View Details</Link>
+                    </div>
                   </div>
-                  <div className="pet-info">
-                    <h3>{pet.name}</h3>
-                    <p className="pet-breed">{pet.breed}</p>
-                    <p className="pet-details">{pet.age} year{pet.age !== 1 ? 's' : ''} • {pet.gender}</p>
-                    <p className="pet-location">{pet.location}</p>
-                    <Link to={`/pets/${pet._id}`} className="view-profile-btn">View Profile</Link>
+                ))}
+              </div>
+              
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="pagination">
+                  <button 
+                    onClick={goToPreviousPage} 
+                    disabled={currentPage === 1}
+                    className="page-navigation"
+                  >
+                    &laquo; Previous
+                  </button>
+                  
+                  <div className="page-numbers">
+                    {[...Array(totalPages)].map((_, index) => {
+                      // Show limited page numbers with ellipses
+                      const pageNum = index + 1;
+                      
+                      // Always show first page, last page, current page, and one page before/after current
+                      if (
+                        pageNum === 1 || 
+                        pageNum === totalPages || 
+                        (pageNum >= currentPage - 1 && pageNum <= currentPage + 1)
+                      ) {
+                        return (
+                          <button 
+                            key={index} 
+                            onClick={() => paginate(pageNum)}
+                            className={pageNum === currentPage ? 'active' : ''}
+                          >
+                            {pageNum}
+                          </button>
+                        );
+                      }
+                      
+                      // Show ellipsis for skipped pages (but only once)
+                      if (
+                        (pageNum === 2 && currentPage > 3) || 
+                        (pageNum === totalPages - 1 && currentPage < totalPages - 2)
+                      ) {
+                        return <span key={index} className="ellipsis">...</span>;
+                      }
+                      
+                      return null;
+                    })}
                   </div>
+                  
+                  <button 
+                    onClick={goToNextPage} 
+                    disabled={currentPage === totalPages}
+                    className="page-navigation"
+                  >
+                    Next &raquo;
+                  </button>
                 </div>
-              ))}
-            </div>
+              )}
+            </>
           )}
         </div>
       </div>

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 import './SignupPage.css';
 
 const SignupPage = () => {
@@ -12,7 +13,9 @@ const SignupPage = () => {
     countryCode: '+961' // Default to Lebanon
   });
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { register } = useAuth();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -22,7 +25,7 @@ const SignupPage = () => {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
     // Basic validation
@@ -36,21 +39,33 @@ const SignupPage = () => {
       return;
     }
     
-    // Simulate signup success
-    console.log('Sign up with:', formData);
-    // In a real app, you would make an API call to create the user
-    
-    // Redirect to login page on success
-    navigate('/login');
+    try {
+      setLoading(true);
+      setError('');
+      
+      // Prepare user data for registration
+      const userData = {
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
+        phoneNumber: `${formData.countryCode}${formData.phone}`
+      };
+      
+      // Call register method from context
+      await register(userData);
+      
+      // Redirect to homepage on success
+      navigate('/');
+    } catch (error) {
+      setError(error.message || 'Registration failed. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleGoogleSignup = () => {
-    // Simulate Google signup
-    console.log('Sign up with Google');
-    // In a real app, you would handle Google OAuth
-    
-    // Redirect to homepage on success
-    navigate('/');
+    // This would be implemented with OAuth
+    setError('Google signup is not implemented yet');
   };
 
   // Country codes for select dropdown
@@ -81,6 +96,7 @@ const SignupPage = () => {
               onChange={handleChange}
               placeholder="Enter your full name"
               required
+              disabled={loading}
             />
           </div>
           
@@ -94,6 +110,7 @@ const SignupPage = () => {
               onChange={handleChange}
               placeholder="Enter your email"
               required
+              disabled={loading}
             />
           </div>
           
@@ -107,6 +124,7 @@ const SignupPage = () => {
               onChange={handleChange}
               placeholder="Create a password"
               required
+              disabled={loading}
             />
           </div>
           
@@ -120,6 +138,7 @@ const SignupPage = () => {
               onChange={handleChange}
               placeholder="Confirm your password"
               required
+              disabled={loading}
             />
           </div>
           
@@ -131,6 +150,7 @@ const SignupPage = () => {
                 value={formData.countryCode}
                 onChange={handleChange}
                 className="country-code-select"
+                disabled={loading}
               >
                 {countryCodes.map((country) => (
                   <option key={country.code} value={country.code}>
@@ -147,18 +167,29 @@ const SignupPage = () => {
                 placeholder="Enter your phone number"
                 className="phone-input"
                 required
+                disabled={loading}
               />
             </div>
           </div>
           
-          <button type="submit" className="signup-button">Sign Up</button>
+          <button 
+            type="submit" 
+            className="signup-button"
+            disabled={loading}
+          >
+            {loading ? 'Signing Up...' : 'Sign Up'}
+          </button>
         </form>
         
         <div className="divider">
           <span>OR</span>
         </div>
         
-        <button onClick={handleGoogleSignup} className="google-button">
+        <button 
+          onClick={handleGoogleSignup} 
+          className="google-button"
+          disabled={loading}
+        >
           Continue with Google
         </button>
         

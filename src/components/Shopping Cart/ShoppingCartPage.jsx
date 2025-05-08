@@ -1,65 +1,71 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import CartService from '../../services/cartService';
+//import ProductService from '../../services/productService';
 import './ShoppingCartPage.css';
 
-// Import product images for placeholder items
-import dogFood1 from '../../assets/images/food/dog/Cesar steak dog.webp';
-import dogToy1 from '../../assets/images/toys/playology chew stick dog.webp';
-import catFood1 from '../../assets/images/food/cat/purina fancy feast wet cat.webp';
+// Import images for empty cart page only
+// import dogFood1 from '../../assets/images/food/dog/Cesar steak dog.webp';
+// import dogToy1 from '../../assets/images/toys/playology chew stick dog.webp';
+// import catFood1 from '../../assets/images/food/cat/purina fancy feast wet cat.webp';
 
 const ShoppingCartPage = () => {
   const [cart, setCart] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  // Sample placeholder products
-  const placeholderProducts = [
-    {
-      id: 1,
-      name: 'CESAR Adult Soft Wet Dog Food Steak Lovers Variety Pack',
-      category: 'Food',
-      subcategory: 'Dog Food',
-      price: 35.99,
-      quantity: 2,
-      stock: 15,
-      image: dogFood1
-    },
-    {
-      id: 3,
-      name: 'Squeaky Chew Stick Bundle, X-Large, 2-Pack',
-      category: 'Toy',
-      subcategory: 'Dog Toys',
-      price: 12.99,
-      discountPrice: 9.99,
-      quantity: 1,
-      stock: 20,
-      image: dogToy1
-    },
-    {
-      id: 7,
-      name: 'Purina Fancy Feast Wet Cat Food Variety Pack',
-      category: 'Food',
-      subcategory: 'Cat Food',
-      price: 22.99,
-      quantity: 1,
-      stock: 18,
-      image: catFood1
-    }
-  ];
+  // Sample placeholder products for empty cart suggestions
+  // const placeholderProducts = [
+  //   {
+  //     productId: 'placeholder-1',
+  //     name: 'CESAR Adult Soft Wet Dog Food Steak Lovers Variety Pack',
+  //     category: 'food',
+  //     price: 35.99,
+  //     quantity: 1,
+  //     countInStock: 15,
+  //     image: dogFood1
+  //   },
+  //   {
+  //     productId: 'placeholder-2',
+  //     name: 'Squeaky Chew Stick Bundle, X-Large, 2-Pack',
+  //     category: 'toys',
+  //     price: 12.99,
+  //     quantity: 1,
+  //     countInStock: 20,
+  //     image: dogToy1
+  //   },
+  //   {
+  //     productId: 'placeholder-3',
+  //     name: 'Purina Fancy Feast Wet Cat Food Variety Pack',
+  //     category: 'food',
+  //     price: 22.99,
+  //     quantity: 1,
+  //     countInStock: 18,
+  //     image: catFood1
+  //   }
+  // ];
 
   useEffect(() => {
-    // Get cart from localStorage
-    const savedCart = localStorage.getItem('cartItems');
-    if (savedCart) {
-      setCart(JSON.parse(savedCart));
-    }
-    setLoading(false);
+    // Get initial cart from CartService
+    loadCart();
+
+    // Listen for storage events to update cart when it changes
+    const handleStorageChange = () => {
+      loadCart();
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
   }, []);
 
-  useEffect(() => {
-    // Save cart to localStorage whenever it changes
-    localStorage.setItem('cartItems', JSON.stringify(cart));
-  }, [cart]);
+  const loadCart = () => {
+    const cartItems = CartService.getCartItems();
+    setCart(cartItems);
+    setLoading(false);
+  };
 
   const updateQuantity = (productId, newQuantity) => {
     if (newQuantity < 1) {
@@ -67,27 +73,34 @@ const ShoppingCartPage = () => {
       return;
     }
     
-    setCart(prevCart => 
-      prevCart.map(item => 
-        item.id === productId 
-          ? { ...item, quantity: newQuantity } 
-          : item
-      )
-    );
+    // Find the item to check stock limit
+    const item = cart.find(item => item.productId === productId);
+    if (item && item.countInStock) {
+      // Ensure quantity doesn't exceed stock
+      newQuantity = Math.min(newQuantity, item.countInStock);
+    }
+    
+    CartService.updateCartItemQuantity(productId, newQuantity);
+    loadCart();
+  };
+
+  const handleQuantityChange = (e, productId) => {
+    const value = parseInt(e.target.value) || 1;
+    updateQuantity(productId, value);
   };
 
   const removeFromCart = (productId) => {
-    setCart(prevCart => prevCart.filter(item => item.id !== productId));
+    CartService.removeFromCart(productId);
+    loadCart();
   };
 
   const clearCart = () => {
-    setCart([]);
+    CartService.clearCart();
+    loadCart();
   };
 
   // Calculate cart totals
-  const subtotal = cart.reduce((total, item) => 
-    total + (item.discountPrice || item.price) * item.quantity, 0
-  );
+  const subtotal = CartService.getCartTotal();
   
   const taxRate = 0.11; // 11% tax rate
   const tax = subtotal * taxRate;
@@ -96,11 +109,17 @@ const ShoppingCartPage = () => {
   
   const total = subtotal + tax + shipping;
   
-  const itemCount = cart.reduce((count, item) => count + item.quantity, 0);
+  const itemCount = CartService.getCartItemCount();
 
   // Function to add a placeholder product to cart for demo purposes
-  const addPlaceholderToCart = (product) => {
-    setCart([...cart, product]);
+  //const addPlaceholderToCart = (product) => {
+  //   CartService.addToCart(product);
+  //   loadCart();
+  // };
+
+  // Proceed to checkout
+  const proceedToCheckout = () => {
+    navigate('/checkout');
   };
 
   if (loading) {
@@ -126,11 +145,11 @@ const ShoppingCartPage = () => {
             <p>Looks like you haven't added any items to your cart yet.</p>
             
             {/* Display sample products that can be added to cart */}
-            <div className="sample-products">
+            {/* <div className="sample-products">
               <h3>Suggested Products</h3>
               <div className="sample-products-grid">
                 {placeholderProducts.map(product => (
-                  <div key={product.id} className="sample-product">
+                  <div key={product.productId} className="sample-product">
                     <div className="sample-product-image">
                       <img src={product.image} alt={product.name} />
                     </div>
@@ -156,16 +175,16 @@ const ShoppingCartPage = () => {
                   </div>
                 ))}
               </div>
-            </div>
+            </div> */}
             
-            <Link to="/products" className="continue-shopping-link">
+            <Link to="/products" className="continue-shopping-link-cart">
               Continue Shopping
             </Link>
           </div>
         ) : (
           <div className="cart-content">
-            <div className="cart-items-section">
-              <div className="cart-items-header">
+            <div className="cart-items-section-cart">
+              <div className="cart-items-header-cart">
                 <span className="product-col">Product</span>
                 <span className="price-col">Price</span>
                 <span className="quantity-col">Quantity</span>
@@ -174,17 +193,17 @@ const ShoppingCartPage = () => {
               
               <div className="cart-items-list">
                 {cart.map(item => (
-                  <div key={item.id} className="cart-item">
+                  <div key={item.productId} className="cart-item-cart">
                     <div className="product-col">
                       <div className="product-image">
                         <img src={item.image} alt={item.name} />
                       </div>
                       <div className="product-details">
                         <h3>{item.name}</h3>
-                        <p className="product-category">{item.category} • {item.subcategory}</p>
+                        <p className="product-category">{item.category}</p>
                         <button 
                           className="remove-item-btn"
-                          onClick={() => removeFromCart(item.id)}
+                          onClick={() => removeFromCart(item.productId)}
                         >
                           Remove
                         </button>
@@ -192,31 +211,34 @@ const ShoppingCartPage = () => {
                     </div>
                     
                     <div className="price-col">
-                      ${(item.discountPrice || item.price).toFixed(2)}
+                      ${item.price.toFixed(2)}
                     </div>
                     
                     <div className="quantity-col">
                       <div className="quantity-control">
                         <button 
-                          onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                          className="quantity-btn"
+                          onClick={() => updateQuantity(item.productId, item.quantity - 1)}
+                          className="quantity-btn-cart"
                           aria-label="Decrease quantity"
+                          disabled={item.quantity <= 1}
+                          max={item.countInStock}
                         >
                           -
                         </button>
-                        <input 
-                          type="number" 
+                        <input
+                          //type="number"
                           min="1" 
-                          max={item.stock} 
+                          max={item.countInStock} 
                           value={item.quantity}
-                          onChange={(e) => updateQuantity(item.id, parseInt(e.target.value) || 1)}
-                          className="quantity-input"
+                          onChange={(e) => handleQuantityChange(e, item.productId)}
+                          className="quantity-input-cart"
                         />
                         <button 
-                          onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                          className="quantity-btn"
-                          disabled={item.quantity >= item.stock}
+                          onClick={() => updateQuantity(item.productId, item.quantity + 1)}
+                          className="quantity-btn-cart"
+                          disabled={item.quantity >= item.countInStock}
                           aria-label="Increase quantity"
+                          max={item.countInStock}
                         >
                           +
                         </button>
@@ -224,7 +246,7 @@ const ShoppingCartPage = () => {
                     </div>
                     
                     <div className="total-col">
-                      ${((item.discountPrice || item.price) * item.quantity).toFixed(2)}
+                      ${(item.price * item.quantity).toFixed(2)}
                     </div>
                   </div>
                 ))}
@@ -262,9 +284,9 @@ const ShoppingCartPage = () => {
               </div>
               
               {shipping > 0 && (
-                <p className="free-shipping-note">
-                  Add ${(50 - subtotal).toFixed(2)} more to get FREE shipping!
-                </p>
+                <div className="free-shipping-msg">
+                  <p>Add ${(50 - subtotal).toFixed(2)} more to qualify for FREE shipping</p>
+                </div>
               )}
               
               <div className="summary-total">
@@ -272,20 +294,21 @@ const ShoppingCartPage = () => {
                 <span>${total.toFixed(2)}</span>
               </div>
               
-              <button 
-                className="checkout-btn"
-                onClick={() => navigate('/checkout')}
-                disabled={cart.length === 0}
-              >
-                Proceed to Checkout
-              </button>
+              <div className="checkout-actions">
+                <button 
+                  className="checkout-btn"
+                  onClick={proceedToCheckout}
+                >
+                  Proceed to Checkout
+                </button>
+              </div>
               
-              <div className="payment-methods">
+              <div className="payment-methods-cart">
                 <p>We accept:</p>
-                <div className="payment-icons">
-                  <span className="payment-icon">💳</span>
-                  <span className="payment-icon">💰</span>
-                  <span className="payment-icon">🏦</span>
+                <div className="payment-icons-cart">
+                  <span className="payment-icon-cart">Visa</span>
+                  <span className="payment-icon-cart">Mastercard</span>
+                  <span className="payment-icon-cart">American Express</span>
                 </div>
               </div>
             </div>
