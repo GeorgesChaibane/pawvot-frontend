@@ -98,40 +98,30 @@ const Navbar = ({ onSearch }) => {
     };
 
     return (
-        <header>
-            <div className="box-model flex">
-                <Link to="/" className="logo">
-                    <img src={logoImage} alt="Pawvot Logo" />
-                </Link>
+        <header className="navbar">
+            <div className="navbar-container">
+                <div className="navbar-logo">
+                    <Link to="/">
+                        <img src={logoImage} alt="Pawvot" />
+                    </Link>
+                </div>
                 
-                <div className="search-container">
-                    <form className="search-form" onSubmit={handleSubmit}>
-                        <div className="input-with-icon">
-                            <img src={searchIcon} alt="Search" className="search-icon" />
-                            <input
-                                placeholder="Search by breed, product, or city"
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                disabled={isSearching}
-                            />
-                        </div>
-                        <button 
-                            type="submit" 
-                            className="search-button" 
-                            disabled={isSearching}
-                        >
-                            {isSearching ? 'Searching...' : 'Search'}
+                <div className="navbar-search">
+                    <div className="search-container">
+                        <img src={searchIcon} alt="Search" className="search-icon-left" />
+                        <input
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            placeholder="Search by breed, product, or city"
+                            onKeyPress={(e) => e.key === 'Enter' && handleSubmit(e)}
+                        />
+                        <button onClick={handleSubmit} className="search-button-text" disabled={isSearching}>
+                            Search
                         </button>
-                    </form>
+                    </div>
                 </div>
                 
                 <div className="nav-auth-container">
-                    <button className="burger-menu" onClick={toggleMenu} aria-label="Toggle menu">
-                        <span></span>
-                        <span></span>
-                        <span></span>
-                    </button>
-                    
                     <div className={`nav-container ${isMenuOpen ? 'active' : ''}`}>
                         <nav>
                             <ul>
@@ -139,9 +129,25 @@ const Navbar = ({ onSearch }) => {
                                 <li><Link to="/products" onClick={closeMenu}>Shop</Link></li>
                                 <li><Link to="/bookings" onClick={closeMenu}>Bookings</Link></li>
                                 <li><Link to="/orders" onClick={closeMenu}>Orders</Link></li>
+                                <li><Link to="/petai" onClick={closeMenu}>PawPal</Link></li>
                                 <li>
                                     <Link to="/cart" onClick={closeMenu} className="cart-link">
-                                        <span className="cart-icon">🛒</span> 
+                                        <svg 
+                                            xmlns="http://www.w3.org/2000/svg" 
+                                            width="20" 
+                                            height="20" 
+                                            viewBox="0 0 24 24" 
+                                            fill="none" 
+                                            stroke="currentColor" 
+                                            strokeWidth="2" 
+                                            strokeLinecap="round" 
+                                            strokeLinejoin="round" 
+                                            className="cart-icon"
+                                        >
+                                            <circle cx="9" cy="21" r="1"></circle>
+                                            <circle cx="20" cy="21" r="1"></circle>
+                                            <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                                        </svg>
                                         
                                         {cartItemCount > 0 && (
                                             <span className="cart-count">{cartItemCount}</span>
@@ -180,15 +186,21 @@ const Navbar = ({ onSearch }) => {
                                 ) : (
                                     <>
                                         <span className="user-name">{currentUser.name}</span>
-                                        <Link to="/" onClick={handleLogout} className="login-signup">Logout</Link>
+                                        <button onClick={handleLogout} className="logout-link">Logout</button>
                                     </>
                                 )}
                             </div>
                         )}
                     </div>
+                    
+                    <button className="burger-menu" onClick={toggleMenu} aria-label="Toggle menu">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </button>
                 </div>
                 
-                {isMenuOpen && <div className="overlay" onClick={closeMenu}></div>}
+                {isMenuOpen && <div className="overlay active" onClick={closeMenu}></div>}
             </div>
         </header>
     );

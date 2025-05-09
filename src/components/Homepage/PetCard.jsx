@@ -1,4 +1,5 @@
 import React from 'react';
+import OptimizedImage from '../Common/OptimizedImage';
 // import './styles.css';
 import './styles/pets.css';
 
@@ -8,7 +9,12 @@ const PetCard = ({ pet }) => {
   return (
     <article className="home-pet-card">
       <div className="home-pet-image">
-        <img src={image} alt={`${name} - ${breed}`} />
+        <OptimizedImage 
+          src={image} 
+          alt={`${name} - ${breed}`} 
+          width={300}
+          height={200}
+        />
       </div>
       <div className="home-pet-info">
         <h3>{type}</h3>

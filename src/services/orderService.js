@@ -106,6 +106,91 @@ const OrderService = {
       console.error('Error canceling order:', error);
       throw error;
     }
+  },
+
+  /**
+   * Get user reviews for an order
+   * @param {string} orderId - Order ID
+   * @returns {Promise<Array>} - Array of user reviews
+   */
+  getUserReviews: async (orderId) => {
+    try {
+      const token = localStorage.getItem('token');
+      
+      const config = {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      };
+      
+      const response = await API.get(`/reviews/user`, config);
+      
+      // Filter reviews for products in this specific order if orderId is provided
+      if (orderId) {
+        // We would need to get the order details first to know which products to filter by
+        const orderResponse = await API.get(`/orders/${orderId}`, config);
+        const productIds = orderResponse.data.items.map(item => item.product._id);
+        
+        return response.data.filter(review => 
+          productIds.includes(review.product._id || review.product)
+        );
+      }
+      
+      return response.data;
+    } catch (error) {
+      console.error('Error getting user reviews:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Update a review
+   * @param {string} reviewId - Review ID
+   * @param {Object} reviewData - Review data to update
+   * @returns {Promise<Object>} - Updated review
+   */
+  updateReview: async (reviewId, reviewData) => {
+    try {
+      const token = localStorage.getItem('token');
+      
+      const config = {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      };
+      
+      const response = await API.put(`/reviews/${reviewId}`, reviewData, config);
+      return response.data;
+    } catch (error) {
+      console.error('Error updating review:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Delete a review
+   * @param {string} reviewId - Review ID
+   * @returns {Promise<Object>} - Delete confirmation
+   */
+  deleteReview: async (reviewId) => {
+    try {
+      const token = localStorage.getItem('token');
+      
+      const config = {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      };
+      
+      const response = await API.delete(`/reviews/${reviewId}`, config);
+      return response.data;
+    } catch (error) {
+      console.error('Error deleting review:', error);
+      throw error;
+    }
   }
 };
 

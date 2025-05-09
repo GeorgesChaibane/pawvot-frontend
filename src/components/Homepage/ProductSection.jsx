@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import ProductService from '../../services/productService';
 import ProductCard from './ProductCard';
+import config from '../../config';
 // import './styles.css';
 import './styles/products.css';
 
@@ -226,11 +227,9 @@ const ProductSection = ({ searchQuery }) => {
                     key={product._id || product.id} 
                     product={{
                       ...product,
-                      // Use the correct image path from the server
+                      // Use the config utility for correct image path
                       image: product.images && product.images.length > 0 
-                        ? (product.images[0].startsWith('http') ? product.images[0] : 
-                           product.images[0].startsWith('/') ? product.images[0] : 
-                           `http://localhost:5000${product.images[0]}`)
+                        ? config.getImageUrl(product.images[0])
                         : null
                     }} 
                   />

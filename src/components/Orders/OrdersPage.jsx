@@ -2,18 +2,28 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import OrderService from '../../services/orderService';
+import ReviewService from '../../services/reviewService';
+import config from '../../config';
 import './OrdersPage.css';
 
 const OrdersPage = () => {
-  const { isAuthenticated, currentUser } = useAuth();
+  const { isAuthenticated/*, currentUser */} = useAuth();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [timeFilter, setTimeFilter] = useState('all');
   const [orderStatusFilter, setOrderStatusFilter] = useState('all');
+  const [activeReview, setActiveReview] = useState(null);
+  const [reviewFormData, setReviewFormData] = useState({
+    rating: 5,
+    title: '',
+    comment: ''
+  });
+  const [reviewError, setReviewError] = useState('');
+  const [userReviews, setUserReviews] = useState([]);
 
   useEffect(() => {
-    const fetchOrders = async () => {
+    const fetchData = async () => {
       if (!isAuthenticated) return;
       
       try {
@@ -21,16 +31,23 @@ const OrdersPage = () => {
         // Fetch real orders from API
         const fetchedOrders = await OrderService.getUserOrders();
         setOrders(fetchedOrders);
+        
+        // Fetch user reviews
+        if (isAuthenticated) {
+          const reviews = await ReviewService.getUserReviews();
+          setUserReviews(reviews);
+        }
+        
         setError(null);
       } catch (err) {
-        console.error('Error fetching orders:', err);
-        setError('Failed to load your orders. Please try again.');
+        console.error('Error fetching data:', err);
+        setError('Failed to load your data. Please try again.');
       } finally {
         setLoading(false);
       }
     };
 
-    fetchOrders();
+    fetchData();
   }, [isAuthenticated]);
 
   // Filter orders by time period
@@ -97,6 +114,128 @@ const OrdersPage = () => {
       case 'cancelled': return 'status-cancelled';
       default: return '';
     }
+  };
+
+  // Check if user has already reviewed a product
+  // const hasUserReviewed = (productId) => {
+  //   return userReviews.some(review => review.product._id === productId);
+  // };
+
+  // Get user's review for a product if it exists
+  const getUserReview = (productId) => {
+    return userReviews.find(review => review.product._id === productId);
+  };
+
+  // Handle opening the review form
+  const handleOpenReviewForm = (orderId, productId, productName) => {
+    const existingReview = getUserReview(productId);
+    
+    if (existingReview) {
+      setReviewFormData({
+        rating: existingReview.rating,
+        title: existingReview.title,
+        comment: existingReview.comment
+      });
+    } else {
+      setReviewFormData({
+        rating: 5,
+        title: '',
+        comment: ''
+      });
+    }
+    
+    setActiveReview({
+      orderId,
+      productId,
+      productName,
+      reviewId: existingReview?._id
+    });
+  };
+
+  // Handle review form input changes
+  const handleReviewInputChange = (e) => {
+    const { name, value } = e.target;
+    setReviewFormData({
+      ...reviewFormData,
+      [name]: name === 'rating' ? parseInt(value) : value
+    });
+  };
+
+  // Handle submitting a review
+  const handleSubmitReview = async (e) => {
+    e.preventDefault();
+    setReviewError('');
+    
+    if (!reviewFormData.title.trim()) {
+      setReviewError('Please add a title for your review');
+      return;
+    }
+    
+    if (!reviewFormData.comment.trim()) {
+      setReviewError('Please add comments for your review');
+      return;
+    }
+    
+    try {
+      if (activeReview.reviewId) {
+        // Update existing review
+        await ReviewService.updateReview(activeReview.reviewId, reviewFormData);
+      } else {
+        // Create new review
+        await ReviewService.createReview(activeReview.productId, reviewFormData);
+      }
+      
+      // Refresh user reviews
+      const reviews = await ReviewService.getUserReviews();
+      setUserReviews(reviews);
+      
+      // Close form
+      setActiveReview(null);
+    } catch (error) {
+      console.error('Error submitting review:', error);
+      setReviewError(error.response?.data?.message || 'Failed to submit review');
+    }
+  };
+
+  // Handle deleting a review
+  const handleDeleteReview = async (reviewId) => {
+    try {
+      await ReviewService.deleteReview(reviewId);
+      
+      // Refresh user reviews
+      const reviews = await ReviewService.getUserReviews();
+      setUserReviews(reviews);
+      
+      // Close form if open
+      setActiveReview(null);
+    } catch (error) {
+      console.error('Error deleting review:', error);
+      setReviewError(error.response?.data?.message || 'Failed to delete review');
+    }
+  };
+
+  // Confirm review deletion
+  const confirmDeleteReview = (reviewId) => {
+    if (window.confirm("Are you sure you want to remove this review?")) {
+      handleDeleteReview(reviewId);
+    }
+  };
+
+  // Render stars for rating display
+  const renderStars = (rating) => {
+    const stars = [];
+    for (let i = 1; i <= 5; i++) {
+      stars.push(
+        <span 
+          key={i} 
+          className={`star ${i <= rating ? 'active' : ''}`}
+          onClick={() => handleReviewInputChange({ target: { name: 'rating', value: i } })}
+        >
+          ★
+        </span>
+      );
+    }
+    return stars;
   };
 
   if (!isAuthenticated) {
@@ -190,23 +329,111 @@ const OrdersPage = () => {
                     </div>
                     
                     <div className="order-items">
-                      {order.items?.map((item, index) => (
-                        <div key={index} className="order-item">
-                          <div className="item-image">
-                            <img 
-                              src={item.product?.images?.[0] || 'https://via.placeholder.com/80'} 
-                              alt={item.product?.name || 'Product'} 
-                            />
+                      {order.items?.map((item, index) => {
+                        const productId = item.product?._id;
+                        const existingReview = getUserReview(productId);
+                        const productName = item.product?.name || 'Product';
+                        
+                        return (
+                          <div key={index} className="order-item">
+                            <div className="item-image">
+                              <img 
+                                src={item.product?.images?.[0] ? config.getImageUrl(item.product.images[0]) : 'https://via.placeholder.com/80'} 
+                                alt={productName} 
+                              />
+                            </div>
+                            <div className="item-details">
+                              <h4>{productName}</h4>
+                              <p>Qty: {item.quantity} × ${item.price?.toFixed(2) || '0.00'}</p>
+                              
+                              {order.status === 'delivered' && (
+                                <>
+                                  {existingReview ? (
+                                    <div className="user-review-summary">
+                                      <div className="review-rating-display">
+                                        {renderStars(existingReview.rating)}
+                                      </div>
+                                      <p className="review-title-display">{existingReview.title}</p>
+                                      <button 
+                                        className="edit-review-btn"
+                                        onClick={() => handleOpenReviewForm(order._id, productId, productName)}
+                                      >
+                                        Edit Review
+                                      </button>
+                                      <button 
+                                        className="remove-review-btn"
+                                        onClick={() => confirmDeleteReview(existingReview._id)}
+                                      >
+                                        Remove
+                                      </button>
+                                    </div>
+                                  ) : (
+                                    <button 
+                                      className="write-review-btn"
+                                      onClick={() => handleOpenReviewForm(order._id, productId, productName)}
+                                    >
+                                      Write a Review
+                                    </button>
+                                  )}
+                                  
+                                  {activeReview && activeReview.productId === productId && (
+                                    <div className="review-form">
+                                      <button 
+                                        className="cancel-review-btn"
+                                        onClick={() => setActiveReview(null)}
+                                      >
+                                        Cancel
+                                      </button>
+                                      
+                                      <form onSubmit={handleSubmitReview}>
+                                        <div className="form-group">
+                                          <label>Rating</label>
+                                          <div className="star-rating-input">
+                                            {renderStars(reviewFormData.rating)}
+                                          </div>
+                                        </div>
+                                        
+                                        <div className="form-group">
+                                          <input
+                                            type="text"
+                                            name="title"
+                                            value={reviewFormData.title}
+                                            onChange={handleReviewInputChange}
+                                            placeholder="Review Title"
+                                            required
+                                          />
+                                        </div>
+                                        
+                                        <div className="form-group">
+                                          <textarea
+                                            name="comment"
+                                            value={reviewFormData.comment}
+                                            onChange={handleReviewInputChange}
+                                            placeholder="Write your review here..."
+                                            rows="3"
+                                            required
+                                          ></textarea>
+                                        </div>
+                                        
+                                        {reviewError && (
+                                          <div className="review-error-message">{reviewError}</div>
+                                        )}
+                                        
+                                        <button type="submit" className="submit-review-btn">
+                                          {activeReview.reviewId ? 'Update Review' : 'Submit Review'}
+                                        </button>
+                                      </form>
+                                    </div>
+                                  )}
+                                </>
+                              )}
+                            </div>
+                            <div className="item-price">
+                              ${(item.price * item.quantity).toFixed(2) || '0.00'}
+                            </div>
                           </div>
-                          <div className="item-details">
-                            <h4>{item.product?.name || 'Product'}</h4>
-                            <p>Qty: {item.quantity} × ${item.price?.toFixed(2) || '0.00'}</p>
-                          </div>
-                          <div className="item-price">
-                            ${(item.price * item.quantity).toFixed(2) || '0.00'}
-                          </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                     
                     <div className="order-summary">
@@ -237,11 +464,6 @@ const OrdersPage = () => {
                       <Link to={`/orders/${order._id}`} className="view-order-btn">
                         View Details
                       </Link>
-                      {order.status === 'delivered' && (
-                        <button className="review-order-btn">
-                          Write a Review
-                        </button>
-                      )}
                     </div>
                   </div>
                 ))}

@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 //import { useAuth } from '../../context/AuthContext';
 import ProductService from '../../services/productService';
 import CartService from '../../services/cartService';
+import config from '../../config';
 import './AllProductsPage.css';
 
 // import dogFood1 from '../../assets/images/food/dog/Cesar steak dog.webp';
@@ -178,6 +179,9 @@ import './AllProductsPage.css';
 //   }
 // ];
 
+// API base URL
+//const BASE_API_URL = 'http://localhost:5000';
+
 const AllProductsPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -229,13 +233,7 @@ const AllProductsPage = () => {
           discountPrice: product.discount ? 
             (product.price - (product.price * product.discount / 100)).toFixed(2) * 1 : 
             null,
-          // Fix image paths
-          images: product.images && product.images.length > 0 ? 
-            product.images.map(imgPath => 
-              imgPath.startsWith('http') ? imgPath : 
-              imgPath.startsWith('/') ? `http://localhost:5000${imgPath}` : 
-              imgPath
-            ) : []
+          // No need to fix image paths here as we'll use the config helper when rendering
         }));
         
         setProducts(productsWithDisplayPrice);
@@ -512,7 +510,7 @@ const AllProductsPage = () => {
                       <Link to={`/products/${product._id}`}>
                         <img 
                           src={product.images && product.images.length > 0 ? 
-                            product.images[0] : 
+                            config.getImageUrl(product.images[0]) : 
                             'https://via.placeholder.com/300x300?text=No+Image'
                           } 
                           alt={product.name} 

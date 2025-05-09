@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import CartService from '../../services/cartService';
+import config from '../../config';
 //import ProductService from '../../services/productService';
 import './ShoppingCartPage.css';
 
@@ -62,9 +63,21 @@ const ShoppingCartPage = () => {
   }, []);
 
   const loadCart = () => {
-    const cartItems = CartService.getCartItems();
-    setCart(cartItems);
-    setLoading(false);
+    try {
+      const cartData = CartService.getCartItems();
+      
+      // Process each item to ensure proper image path
+      const processedCart = cartData.map(item => ({
+        ...item,
+        image: item.image ? config.getImageUrl(item.image) : 'https://via.placeholder.com/300x300?text=No+Image'
+      }));
+      
+      setCart(processedCart);
+      setLoading(false);
+    } catch (error) {
+      console.error('Error loading cart:', error);
+      setLoading(false);
+    }
   };
 
   const updateQuantity = (productId, newQuantity) => {

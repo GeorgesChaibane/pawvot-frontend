@@ -52,6 +52,34 @@
     margin-bottom: 24px;
 }
 
+.success-icon {
+    background-color: #4BB543;
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.success-icon svg {
+    stroke: #FFFFFF;
+}
+
+.error-icon {
+    background-color: #FF3B30;
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.error-icon svg {
+    stroke: #FFFFFF;
+}
+
 .action-buttons {
     display: flex;
     gap: 12px;

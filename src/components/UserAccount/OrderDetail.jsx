@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import './OrderDetail.css';
+//import { useAuth } from '../../context/AuthContext';
 import OrderService from '../../services/orderService';
+import config from '../../config';
+import './OrderDetail.css';
 
 const OrderDetail = () => {
   const { orderId } = useParams();
@@ -10,6 +12,15 @@ const OrderDetail = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [isAuthenticated/*, setIsAuthenticated*/] = useState(true);
+  const [userReviews, setUserReviews] = useState([]);
+  const [activeReview, setActiveReview] = useState(null);
+  const [editingReview, setEditingReview] = useState(false);
+  const [reviewForm, setReviewForm] = useState({
+    rating: 0,
+    title: '',
+    comment: ''
+  });
+  const [reviewError, setReviewError] = useState('');
 
   useEffect(() => {
     const fetchOrderDetails = async () => {
@@ -41,6 +52,24 @@ const OrderDetail = () => {
     };
     
     fetchOrderDetails();
+  }, [orderId, isAuthenticated]);
+
+  useEffect(() => {
+    const fetchUserReviews = async () => {
+      try {
+        if (!isAuthenticated) {
+          return;
+        }
+        
+        const reviews = await OrderService.getUserReviews(orderId);
+        setUserReviews(reviews);
+      } catch (err) {
+        console.error('Error fetching user reviews:', err);
+        setError('Failed to load user reviews. Please try again.');
+      }
+    };
+    
+    fetchUserReviews();
   }, [orderId, isAuthenticated]);
 
   // Handle cancel order
@@ -94,6 +123,82 @@ const OrderDetail = () => {
       default:
         return 'status-badge';
     }
+  };
+
+  const handleEditReview = (review) => {
+    setActiveReview(review);
+    setEditingReview(true);
+    setReviewForm({
+      rating: review.rating,
+      title: review.title,
+      comment: review.comment
+    });
+  };
+
+  const handleDeleteReview = async (reviewId) => {
+    if (!window.confirm('Are you sure you want to remove this review?')) {
+      return;
+    }
+    
+    try {
+      await OrderService.deleteReview(reviewId);
+      setUserReviews(prevReviews => prevReviews.filter(review => review._id !== reviewId));
+      setActiveReview(null);
+      setEditingReview(false);
+    } catch (err) {
+      console.error('Error deleting review:', err);
+      alert('Failed to delete review. Please try again.');
+    }
+  };
+
+  const handleRatingChange = (rating) => {
+    setReviewForm(prevForm => ({
+      ...prevForm,
+      rating: rating
+    }));
+  };
+
+  const handleReviewFormChange = (e) => {
+    const { name, value } = e.target;
+    setReviewForm(prevForm => ({
+      ...prevForm,
+      [name]: value
+    }));
+  };
+
+  const handleSubmitReview = async (e) => {
+    e.preventDefault();
+    if (!activeReview) {
+      setReviewError('No review selected');
+      return;
+    }
+    
+    try {
+      const updatedReview = await OrderService.updateReview(activeReview._id, reviewForm);
+      setUserReviews(prevReviews => prevReviews.map(review =>
+        review._id === activeReview._id ? updatedReview : review
+      ));
+      setActiveReview(null);
+      setEditingReview(false);
+      setReviewForm({
+        rating: 0,
+        title: '',
+        comment: ''
+      });
+    } catch (err) {
+      console.error('Error updating review:', err);
+      setReviewError('Failed to update review. Please try again.');
+    }
+  };
+
+  const handleCancelReview = () => {
+    setActiveReview(null);
+    setEditingReview(false);
+    setReviewForm({
+      rating: 0,
+      title: '',
+      comment: ''
+    });
   };
 
   if (loading) {
@@ -166,7 +271,10 @@ const OrderDetail = () => {
             {order.items?.map((item, index) => (
               <div key={index} className="order-item">
                 <div className="item-image">
-                  <img src={item.product?.images?.[0] || item.image || 'https://via.placeholder.com/80'} alt={item.product?.name || item.name || 'Product'} />
+                  <img src={item.product?.images?.[0] ? config.getImageUrl(item.product.images[0]) : 
+                      item.image ? config.getImageUrl(item.image) : 
+                      'https://via.placeholder.com/80'} 
+                    alt={item.product?.name || item.name || 'Product'} />
                 </div>
                 <div className="item-info">
                   <h4>{item.product?.name || item.name || 'Product'}</h4>
@@ -248,13 +356,104 @@ const OrderDetail = () => {
             Cancel Order
           </button>
         )}
-        
-        {order.isDelivered && (
-          <Link to={`/review?orderId=${order._id}`} className="review-button">
-            Write Product Reviews
-          </Link>
-        )}
       </div>
+
+      {order.status === 'Delivered' && (
+        <div className="review-section">
+          <h3>Product Reviews</h3>
+          {/* Display existing reviews */}
+          {userReviews.length > 0 ? (
+            <div className="existing-reviews">
+              {userReviews.map(review => (
+                <div key={review._id} className="review-item">
+                  <div className="review-header">
+                    <h4>{review.title}</h4>
+                    <div className="review-rating">
+                      {[...Array(5)].map((_, i) => (
+                        <span key={i} className={i < review.rating ? "star filled" : "star"}>★</span>
+                      ))}
+                    </div>
+                  </div>
+                  <p className="review-comment">{review.comment}</p>
+                  <div className="review-actions">
+                    <button 
+                      onClick={() => handleEditReview(review)} 
+                      className="edit-review-btn"
+                    >
+                      Edit
+                    </button>
+                    <button 
+                      onClick={() => {
+                        if (window.confirm("Are you sure you want to remove this review?")) {
+                          handleDeleteReview(review._id);
+                        }
+                      }} 
+                      className="delete-review-btn"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            /* Only show "No reviews yet" message, but don't show the "Write Product Reviews" button */
+            <p>You haven't reviewed any products from this order yet.</p>
+          )}
+          
+          {/* Review form - Only show when user clicks Edit */}
+          {activeReview && (
+            <div className="review-form">
+              <h4>{editingReview ? 'Edit Review' : 'Write a Review'}</h4>
+              {reviewError && <p className="error-message">{reviewError}</p>}
+              <div className="form-group">
+                <label>Rating</label>
+                <div className="rating-input">
+                  {[...Array(5)].map((_, i) => (
+                    <span
+                      key={i}
+                      className={i < reviewForm.rating ? "star filled" : "star"}
+                      onClick={() => handleRatingChange(i + 1)}
+                    >
+                      ★
+                    </span>
+                  ))}
+                </div>
+              </div>
+              <div className="form-group">
+                <label htmlFor="title">Title</label>
+                <input
+                  type="text"
+                  id="title"
+                  name="title"
+                  value={reviewForm.title}
+                  onChange={handleReviewFormChange}
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label htmlFor="comment">Comment</label>
+                <textarea
+                  id="comment"
+                  name="comment"
+                  rows="4"
+                  value={reviewForm.comment}
+                  onChange={handleReviewFormChange}
+                  required
+                ></textarea>
+              </div>
+              <div className="form-actions">
+                <button type="button" onClick={handleCancelReview} className="cancel-button">
+                  Cancel
+                </button>
+                <button type="button" onClick={handleSubmitReview} className="submit-button">
+                  {editingReview ? 'Update Review' : 'Submit Review'}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };

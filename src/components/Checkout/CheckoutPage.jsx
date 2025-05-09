@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import CartService from '../../services/cartService';
 import OrderService from '../../services/orderService';
 import AuthService from '../../services/authService';
+import config from '../../config';
 import './CheckoutPage.css';
 
 const CheckoutPage = () => {
@@ -34,7 +35,14 @@ const CheckoutPage = () => {
   useEffect(() => {
     // Get cart items
     const cartItems = CartService.getCartItems();
-    setCart(cartItems);
+    
+    // Process images through the config utility
+    const processedCartItems = cartItems.map(item => ({
+      ...item,
+      image: item.image ? config.getImageUrl(item.image) : 'https://via.placeholder.com/300x300?text=No+Image'
+    }));
+    
+    setCart(processedCartItems);
     
     // Calculate totals
     const subtotal = cartItems.reduce((total, item) => 

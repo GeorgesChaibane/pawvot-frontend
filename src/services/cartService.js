@@ -1,4 +1,5 @@
 import API from './api';
+import config from '../config';
 
 // Cart service for managing shopping cart items
 const CartService = {
@@ -9,6 +10,14 @@ const CartService = {
   getCartItems: () => {
     const cartItems = localStorage.getItem('cartItems');
     return cartItems ? JSON.parse(cartItems) : [];
+  },
+  
+  /**
+   * Get all items in cart (alias for getCartItems for consistency)
+   * @returns {Array} Array of cart items
+   */
+  getCart: function() {
+    return this.getCartItems();
   },
 
   /**
@@ -51,13 +60,15 @@ const CartService = {
       );
     } else {
       // Add new product to cart
+      // Get image source, preferring the first image in the images array if available
+      const imageSource = product.image || 
+        (product.images && product.images.length > 0 ? product.images[0] : '');
+
       const newItem = {
         productId: product._id || product.productId,
         name: product.name,
-        image: product.image || (product.images && product.images.length > 0 ? 
-          (product.images[0].startsWith('http') ? product.images[0] : 
-           product.images[0].startsWith('/') ? `http://localhost:5000${product.images[0]}` : 
-           product.images[0]) : ''),
+        image: imageSource,
+        category: product.category || '',
         price: product.price,
         countInStock: product.countInStock,
         quantity

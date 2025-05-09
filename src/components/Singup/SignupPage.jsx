@@ -10,7 +10,7 @@ const SignupPage = () => {
     password: '',
     confirmPassword: '',
     phone: '',
-    countryCode: '+961' // Default to Lebanon
+    countryCode: '+961'
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -63,10 +63,10 @@ const SignupPage = () => {
     }
   };
 
-  const handleGoogleSignup = () => {
-    // This would be implemented with OAuth
-    setError('Google signup is not implemented yet');
-  };
+  // const handleGoogleSignup = () => {
+  //   // This would be implemented with OAuth
+  //   setError('Google signup is not implemented yet');
+  // };
 
   // Country codes for select dropdown
   const countryCodes = [
@@ -181,7 +181,7 @@ const SignupPage = () => {
           </button>
         </form>
         
-        <div className="divider">
+        {/* <div className="divider">
           <span>OR</span>
         </div>
         
@@ -191,7 +191,7 @@ const SignupPage = () => {
           disabled={loading}
         >
           Continue with Google
-        </button>
+        </button> */}
         
         <p className="login-link">
           Already have an account? <Link to="/login">Log in</Link>

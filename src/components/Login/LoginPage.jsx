@@ -53,10 +53,10 @@ const LoginPage = () => {
     }
   };
 
-  const handleGoogleLogin = () => {
-    // This would be implemented with OAuth
-    setError('Google login is not implemented yet');
-  };
+  // const handleGoogleLogin = () => {
+  //   // This would be implemented with OAuth
+  //   setError('Google login is not implemented yet');
+  // };
 
   return (
     <div className="login-page">
@@ -110,7 +110,7 @@ const LoginPage = () => {
           </button>
         </form>
         
-        <div className="divider">
+        {/* <div className="divider">
           <span>OR</span>
         </div>
         
@@ -120,7 +120,7 @@ const LoginPage = () => {
           disabled={loading}
         >
           Continue with Google
-        </button>
+        </button> */}
         
         <p className="signup-link">
           Don't have an account? <Link to="/signup">Sign up</Link>

@@ -19,6 +19,18 @@
 
 .success-icon {
     margin-bottom: 20px;
+    background-color: #4BB543;
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px;
+}
+
+.success-icon svg {
+    stroke: #FFFFFF;
 }
 
 .success-container h1 {

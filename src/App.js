@@ -28,6 +28,7 @@ import PaymentInfoPage from './components/Payment/PaymentInfoPage';
 import OrdersPage from './components/Orders/OrdersPage';
 import CashSuccessPage from './components/Payment/CashSuccessPage';
 import EmailVerificationPage from './components/Verification/EmailVerificationPage';
+import PetAIPage from './components/PetAI/PetAIPage';
 
 import './components/Homepage/styles/variables.css';
 
@@ -64,6 +65,7 @@ function App() {
               <Route path="/order-confirmation" element={<OrderConfirmation />} />
               <Route path="/account/orders" element={<OrderHistory />} />
               <Route path="/orders/:orderId" element={<OrderDetail />} />
+              <Route path="/petai" element={<PetAIPage />} />
             </Route>
           </Routes>
           <Footer />

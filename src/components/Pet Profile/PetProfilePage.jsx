@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import PetService from '../../services/petService';
+import OptimizedImage from '../Common/OptimizedImage';
 import './PetProfilePage.css';
 
 const PetProfilePage = () => {
@@ -120,9 +121,11 @@ const PetProfilePage = () => {
         <div className="pet-profile-grid">
           <div className="pet-images-container">
             <div className="pet-main-image">
-              <img 
+              <OptimizedImage 
                 src={pet.images[selectedImage]} 
                 alt={`${pet.name} main view`} 
+                width={600}
+                height={400}
               />
             </div>
             {pet.images.length > 1 && (
@@ -133,7 +136,12 @@ const PetProfilePage = () => {
                     className={`pet-thumbnail ${selectedImage === index ? 'active' : ''}`}
                     onClick={() => setSelectedImage(index)}
                   >
-                    <img src={image} alt={`${pet.name} thumbnail ${index + 1}`} />
+                    <OptimizedImage 
+                      src={image} 
+                      alt={`${pet.name} thumbnail ${index + 1}`} 
+                      width={80} 
+                      height={80}
+                    />
                   </div>
                 ))}
               </div>

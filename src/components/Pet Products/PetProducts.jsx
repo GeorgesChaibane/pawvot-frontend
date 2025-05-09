@@ -2,7 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import ProductService from '../../services/productService';
 import CartService from '../../services/cartService';
+import config from '../../config';
 import './PetProducts.css';
+
+// API base URL
+//const BASE_API_URL = 'http://localhost:5000';
 
 const PetProducts = () => {
   const { productId } = useParams();
@@ -106,9 +110,7 @@ const PetProducts = () => {
   
   // Get first image or placeholder
   const mainImage = product.images && product.images.length > 0 
-    ? (product.images[0].startsWith('http') ? product.images[0] : 
-       product.images[0].startsWith('/') ? `http://localhost:5000${product.images[0]}` : 
-       product.images[0])
+    ? config.getImageUrl(product.images[0])
     : 'https://via.placeholder.com/400x400?text=No+Image+Available';
   
   return (
@@ -123,8 +125,7 @@ const PetProducts = () => {
               {product.images.map((image, index) => (
                 <img 
                   key={index} 
-                  src={image.startsWith('http') ? image : 
-                      image.startsWith('/') ? `http://localhost:5000${image}` : image} 
+                  src={config.getImageUrl(image)} 
                   alt={`${product.name} view ${index + 1}`}
                   className="thumbnail" 
                   onClick={() => {
@@ -273,11 +274,9 @@ const PetProducts = () => {
               <div key={related._id} className="related-product-card" onClick={() => navigate(`/products/${related._id}`)}>
                 <div className="related-product-image">
                   <img 
-                    src={related.images && related.images.length > 0 ? 
-                        (related.images[0].startsWith('http') ? related.images[0] : 
-                         related.images[0].startsWith('/') ? `http://localhost:5000${related.images[0]}` : 
-                         related.images[0]) 
-                        : 'https://via.placeholder.com/200x200?text=No+Image'} 
+                    src={related.images && related.images.length > 0 ?
+                        config.getImageUrl(related.images[0]) :
+                        'https://via.placeholder.com/200x200?text=No+Image'} 
                     alt={related.name} 
                   />
                 </div>

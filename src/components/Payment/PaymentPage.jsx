@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-//import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../context/AuthContext';
 import OrderService from '../../services/orderService';
-import AuthService from '../../services/authService';
+//import AuthService from '../../services/authService';
+import config from '../../config';
 import './PaymentPage.css';
 
 const PaymentPage = () => {
   const { orderId } = useParams();
   const navigate = useNavigate();
-  //const { currentUser } = useAuth();
+  const { currentUser } = useAuth();
   
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -91,8 +92,7 @@ const PaymentPage = () => {
       
       // Try to send order confirmation email
       try {
-        const user = await AuthService.getCurrentUser();
-        if (user && user.email) {
+        if (currentUser && currentUser.email) {
           await fetch('/api/email/order-confirmation', {
             method: 'POST',
             headers: {
@@ -100,8 +100,8 @@ const PaymentPage = () => {
               'Authorization': `Bearer ${localStorage.getItem('token')}`
             },
             body: JSON.stringify({
-              email: user.email,
-              name: user.name,
+              email: currentUser.email,
+              name: currentUser.name,
               order: order
             })
           });
@@ -161,7 +161,7 @@ const PaymentPage = () => {
     return (
       <div className="payment-page success">
         <div className="success-icon">
-          <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="#4BB543" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
             <polyline points="22 4 12 14.01 9 11.01"></polyline>
           </svg>
@@ -294,7 +294,7 @@ const PaymentPage = () => {
                 <div key={item._id} className="order-item-payment-page">
                   <div className="order-item-image">
                     <img 
-                      src={item.product?.images?.[0] || 'https://via.placeholder.com/60x60?text=Product'} 
+                      src={item.product?.images?.[0] ? config.getImageUrl(item.product.images[0]) : 'https://via.placeholder.com/60x60?text=Product'} 
                       alt={item.product?.name} 
                     />
                     <span className="item-quantity">{item.quantity}</span>
