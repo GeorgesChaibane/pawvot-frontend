@@ -3,7 +3,7 @@
  */
 
 // Your Wit.ai Client Access Token 
-const WIT_AI_TOKEN = 'CFDFWIOYZYVRFG23PMD6BPPXK4T6HKIU'; // Replace this with your Wit.ai Client Access Token from your app settings
+const WIT_AI_TOKEN = 'CFDFWIOYZYVRFG23PMD6BPPXK4T6HKIU'; // The Wit.ai Client Access Token from the app settings
 
 const WitAIService = {
   /**

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 //import { useAuth } from '../../context/AuthContext';
 import ProductService from '../../services/productService';
+//import SearchService from '../../services/searchService';
 import CartService from '../../services/cartService';
 import config from '../../config';
 import './AllProductsPage.css';
@@ -219,11 +220,58 @@ const AllProductsPage = () => {
         setLoading(true);
         let data;
         
-        // Check if we have a search query
+        // Build query parameters for filtered search
+        const params = new URLSearchParams();
+        
+        // Add search query if present
         if (searchQuery) {
-          data = await ProductService.searchProducts(searchQuery);
+          params.append('query', searchQuery);
+        }
+        
+        // Add category filter
+        if (filters.category) {
+          params.append('category', filters.category);
+        }
+        
+        // Add pet type filter
+        if (filters.petType) {
+          params.append('petType', filters.petType);
+        }
+        
+        // Add price range
+        if (filters.priceRange.min && !isNaN(parseFloat(filters.priceRange.min))) {
+          params.append('minPrice', filters.priceRange.min);
+        }
+        
+        if (filters.priceRange.max && !isNaN(parseFloat(filters.priceRange.max))) {
+          params.append('maxPrice', filters.priceRange.max);
+        }
+        
+        // Add sort option
+        if (filters.sortBy) {
+          params.append('sort', filters.sortBy);
+        }
+        
+        // If we have search or filters, use ProductService.searchProducts
+        if (params.toString()) {
+          console.log("Searching with params:", params.toString());
+          data = await ProductService.searchProducts(params);
         } else {
-          data = await ProductService.getAllProducts();
+          // Fetch all products when no filters
+          try {
+            console.log("Fetching all products");
+            data = await ProductService.getAllProducts();
+          } catch (error) {
+            console.error('Error fetching all products, trying fallback:', error);
+            // Fallback to search with empty query
+            data = await ProductService.searchProducts('');
+          }
+        }
+        
+        // Check if data is valid
+        if (!data || !Array.isArray(data)) {
+          console.error('Invalid data returned from API:', data);
+          data = [];
         }
         
         // Add display price field
@@ -237,6 +285,7 @@ const AllProductsPage = () => {
         }));
         
         setProducts(productsWithDisplayPrice);
+        setFilteredProducts(productsWithDisplayPrice); // Use server-side filtering
         setLoading(false);
       } catch (error) {
         console.error('Error fetching products:', error);
@@ -246,88 +295,32 @@ const AllProductsPage = () => {
     };
     
     fetchProducts();
-  }, [searchQuery]);
+  }, [searchQuery, filters]);
   
-  // Apply filters and calculate pagination
+  // Apply pagination
   useEffect(() => {
-    let filtered = [...products];
-    
-    // Apply category filter
-    if (filters.category) {
-      filtered = filtered.filter(product => 
-        product.category && product.category.toLowerCase() === filters.category.toLowerCase()
-      );
-    }
-    
-    // Apply pet type filter
-    if (filters.petType) {
-      filtered = filtered.filter(product => 
-        product.petType && (
-          (Array.isArray(product.petType) && product.petType.includes(filters.petType.toLowerCase())) ||
-          (typeof product.petType === 'string' && product.petType.toLowerCase() === filters.petType.toLowerCase())
-        )
-      );
-    }
-    
-    // Apply price range filter
-    if (filters.priceRange.min && !isNaN(parseFloat(filters.priceRange.min))) {
-      filtered = filtered.filter(product => 
-        (product.discountPrice || product.price) >= parseFloat(filters.priceRange.min)
-      );
-    }
-    
-    if (filters.priceRange.max && !isNaN(parseFloat(filters.priceRange.max))) {
-      filtered = filtered.filter(product => 
-        (product.discountPrice || product.price) <= parseFloat(filters.priceRange.max)
-      );
-    }
-    
-    // Apply sorting
-    switch (filters.sortBy) {
-      case 'price-low-high':
-        filtered.sort((a, b) => 
-          (a.discountPrice || a.price) - (b.discountPrice || b.price)
-        );
-        break;
-      case 'price-high-low':
-        filtered.sort((a, b) => 
-          (b.discountPrice || b.price) - (a.discountPrice || a.price)
-        );
-        break;
-      case 'newest':
-        filtered.sort((a, b) => 
-          new Date(b.createdAt || 0) - new Date(a.createdAt || 0)
-        );
-        break;
-      case 'featured':
-      default:
-        filtered.sort((a, b) => 
-          (b.featured ? 1 : 0) - (a.featured ? 1 : 0)
-        );
-        break;
-    }
-    
     // Calculate total pages
-    setTotalPages(Math.ceil(filtered.length / productsPerPage));
+    setTotalPages(Math.ceil(products.length / productsPerPage));
     
     // Adjust currentPage if it's out of bounds
-    if (currentPage > Math.ceil(filtered.length / productsPerPage)) {
+    if (currentPage > Math.ceil(products.length / productsPerPage)) {
       setCurrentPage(1);
     }
-    
-    setFilteredProducts(filtered);
     
     // Update URL with query parameters
     const newParams = new URLSearchParams();
     if (searchQuery) newParams.set('search', searchQuery);
     if (filters.category) newParams.set('category', filters.category);
     if (filters.petType) newParams.set('petType', filters.petType);
+    if (filters.priceRange.min) newParams.set('minPrice', filters.priceRange.min);
+    if (filters.priceRange.max) newParams.set('maxPrice', filters.priceRange.max);
+    if (filters.sortBy && filters.sortBy !== 'featured') newParams.set('sort', filters.sortBy);
     if (currentPage > 1) newParams.set('page', currentPage.toString());
     
     const newUrl = `${location.pathname}${newParams.toString() ? `?${newParams.toString()}` : ''}`;
     navigate(newUrl, { replace: true });
     
-  }, [products, filters, searchQuery, currentPage, productsPerPage, navigate, location.pathname]);
+  }, [products, currentPage, productsPerPage, navigate, location.pathname, searchQuery, filters]);
   
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
@@ -556,7 +549,7 @@ const AllProductsPage = () => {
                           to={`/products/${product._id}`} 
                           className="buy-now-btn-all"
                         >
-                          Buy Now
+                          See More
                         </Link>
                       </div>
                     </div>

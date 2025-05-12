@@ -15,7 +15,7 @@
 }
 
 .navbar-container {
-    max-width: 1200px;
+    max-width: 1550px;
     margin: 0 auto;
     padding: 0 20px;
     display: flex;
@@ -32,6 +32,7 @@
     height: auto;
     max-height: 40px;
     object-fit: contain;
+    margin-top: 7px;
 }
 /* .search-container {
     flex-grow: 1;
@@ -170,7 +171,7 @@
     top: 0;
     height: 100%;
     scale: 0.7;
-    margin-right: -8px;
+    margin-right: -9px;
 }
 
 .search-button-text:hover {
@@ -293,6 +294,7 @@ nav ul li a:hover {
     border: none;
     cursor: pointer;
     padding: 5px;
+    z-index: 1001;
 }
 
 .burger-menu span {
@@ -302,6 +304,37 @@ nav ul li a:hover {
     background-color: var(--text-color);
     margin: 5px 0;
     transition: all 0.3s;
+}
+
+/* Close button for sidebar */
+.close-menu {
+    display: none;
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 5px;
+    z-index: 1001;
+}
+
+.close-menu::before, 
+.close-menu::after {
+    content: '';
+    position: absolute;
+    width: 25px;
+    height: 3px;
+    background-color: var(--text-color);
+    transition: all 0.3s;
+}
+
+.close-menu::before {
+    transform: rotate(45deg);
+}
+
+.close-menu::after {
+    transform: rotate(-45deg);
 }
 
 .overlay {
@@ -315,7 +348,33 @@ nav ul li a:hover {
     z-index: 998;
 }
 
+/* Sidebar header for mobile menu */
+.sidebar-header {
+    display: none;
+    position: relative;
+    width: 100%;
+    padding: 20px 0;
+    border-bottom: 1px solid rgba(255, 107, 107, 0.2);
+    margin-bottom: 20px;
+}
+
+.sidebar-user-name {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--primary-color);
+    text-align: left;
+    padding-left: 17px;
+    margin-top: -6px;
+    margin-bottom: -9px;
+}
+
 /* Responsive styles */
+@media (max-width: 1350px) {
+    .search-button-text {
+        margin-right: -6px;
+    }
+}
+
 @media (max-width: 992px) {
     .navbar-search {
         max-width: 300px;
@@ -332,44 +391,63 @@ nav ul li a:hover {
 
 @media (max-width: 768px) {
     .navbar-container {
-        flex-wrap: wrap;
+        flex-wrap: nowrap;
         justify-content: space-between;
     }
     
     .navbar-logo {
         flex: 0 0 auto;
-        margin-right: 10px;
+        margin-right: 5px;
     }
     
     .navbar-search {
-        order: 3;
-        flex: 0 0 100%;
-        max-width: 100%;
-        margin: 10px 0 0;
+        flex: 1;
+        max-width: calc(100% - 200px);
+        margin: 0 5px;
+        order: 0;
+    }
+    
+    .search-container input {
+        padding: 6px 35px 6px 30px;
+        font-size: 13px;
+    }
+    
+    .search-icon-left {
+        width: 16px;
+        height: 16px;
+        left: 8px;
+    }
+    
+    .search-button-text {
+        padding: 6px 10px;
+        font-size: 12px;
+        scale: 0.8;
+        margin-right: -2px;
     }
     
     .nav-auth-container {
         flex: 0 0 auto;
-        margin-left: auto;
+        margin-left: 5px;
         display: flex;
         align-items: center;
     }
     
     .burger-menu {
         display: block;
-        margin-left: 15px;
+        margin-left: 5px;
+        scale: 0.9;
     }
     
     .nav-container {
         position: fixed;
         top: 0;
         right: -300px;
-        width: 250px;
+        width: 280px;
         height: 100vh;
-        background: white;
+        background: var(--navbar-color);
         flex-direction: column;
         align-items: flex-start;
-        padding: 80px 20px 20px;
+        padding: 0 0 20px;
         box-shadow: -5px 0 15px rgba(0, 0, 0, 0.1);
         transition: right 0.3s ease;
         z-index: 999;
@@ -379,14 +457,23 @@ nav ul li a:hover {
         right: 0;
     }
     
+    .nav-container.active .close-menu {
+        display: block;
+    }
+    
+    .nav-container.active .sidebar-header {
+        display: block;
+    }
+    
     nav ul {
         flex-direction: column;
         width: 100%;
         align-items: flex-start;
+        padding: 20px;
     }
     
     nav ul li {
-        margin: 10px 0;
+        margin: 15px 0;
         width: 100%;
     }
     
@@ -394,10 +481,39 @@ nav ul li a:hover {
         display: block;
         padding: 8px 0;
         width: 100%;
+        font-size: 16px;
+        font-weight: 500;
     }
     
     .overlay.active {
         display: block;
+    }
+    
+    /* Hide the user-name in the navbar when sidebar is active */
+    .nav-container.active ~ .nav-auth-container .user-name {
+        display: none;
+    }
+    
+    /* Hide the normal logout button in navbar when sidebar is active */
+    .nav-container.active ~ .nav-auth-container .logout-link {
+        display: none;
+    }
+    
+    /* Style the logout link in sidebar */
+    .nav-container .logout-link {
+        background: none;
+        color: var(--text-color);
+        font-size: 16px;
+        font-weight: 500;
+        padding: 8px 0;
+        border-radius: 0;
+        width: 100%;
+        text-align: left;
+    }
+    
+    .nav-container .logout-link:hover {
+        color: var(--primary-color);
+        background: none;
     }
 }
 
@@ -407,31 +523,53 @@ nav ul li a:hover {
     }
 
     .navbar-logo img {
-        width: 70px;
-        margin-right: 5px;
+        width: 60px;
+        max-height: 30px;
+        margin-right: 0;
+        margin-top: 6px;
+    }
+    
+    .navbar-search {
+        max-width: calc(100% - 150px);
     }
 
     .search-container input {
-        font-size: 14px;
-        padding: 8px 40px 8px 40px;
+        font-size: 12px;
+        padding: 5px 30px 5px 25px;
+        height: 32px;;
+    }
+    
+    .search-icon-left {
+        width: 14px;
+        height: 14px;
+        left: 6px;
     }
 
     .search-button-text {
-        padding: 7px 10px;
-        font-size: 12px;
+        padding: 5px 8px;
+        font-size: 10px;
+        scale: 0.7;
+        margin-right: -1px;
     }
     
     .user-name {
-        font-size: 12px;
+        font-size: 11px;
+        margin-right: 5px;
     }
     
     .login-signup {
-        padding: 4px 10px;
-        font-size: 12px;
+        padding: 3px 7px;
+        font-size: 11px;
     }
     
     .logout-link {
-        padding: 4px 10px;
-        font-size: 12px;
+        padding: 3px 7px;
+        font-size: 11px;
+    }
+    
+    .burger-menu span {
+        width: 20px;
+        height: 2px;
+        margin: 4px 0;
     }
 } 

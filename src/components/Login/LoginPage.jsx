@@ -66,7 +66,7 @@ const LoginPage = () => {
         
         {error && (
           <div className="error-message">
-            <i className="error-icon">❌</i>
+            <i>❌ </i>
             {error}
           </div>
         )}

@@ -41,18 +41,56 @@ const AllPetsPage = () => {
         setLoading(true);
         let data;
         
+        if (searchQuery || filters.type || filters.breed || filters.location || filters.gender || filters.age) {
+          // Construct the API query parameters
+          const params = new URLSearchParams();
+          
         if (searchQuery) {
-          // Use search endpoint properly
-          const response = await axios.get(`http://localhost:5000/api/pets/search?query=${searchQuery}`);
+            params.append('query', searchQuery);
+          }
+          
+          if (filters.type) {
+            params.append('type', filters.type);
+          }
+          
+          if (filters.breed) {
+            params.append('breed', filters.breed);
+          }
+          
+          if (filters.location) {
+            params.append('location', filters.location);
+          }
+          
+          if (filters.gender) {
+            params.append('gender', filters.gender);
+          }
+          
+          // Convert age range to min/max
+          if (filters.age) {
+            if (filters.age === 'Under 1') {
+              params.append('maxAge', '1');
+            } else if (filters.age === '1-3') {
+              params.append('minAge', '1');
+              params.append('maxAge', '3');
+            } else if (filters.age === '4-7') {
+              params.append('minAge', '4');
+              params.append('maxAge', '7');
+            } else if (filters.age === '8+') {
+              params.append('minAge', '8');
+            }
+          }
+          
+          // Use search endpoint with all parameters
+          const response = await axios.get(`http://localhost:5000/api/pets/search?${params.toString()}`);
           data = response.data;
         } else {
           data = await PetService.getAllPetsPage();
         }
         
-        // Add gender field (not in API but needed for filtering)
+        // Process the data
         const petsWithGender = data.map(pet => ({
           ...pet,
-          gender: Math.random() > 0.5 ? 'Male' : 'Female', // Random gender assignment
+          gender: pet.gender || (Math.random() > 0.5 ? 'Male' : 'Female'), // Use existing gender or random
           age: typeof pet.age === 'string' ? parseInt(pet.age) || 1 : pet.age, // Ensure age is a number
           // Ensure image has correct path
           image: pet.image ? 
@@ -64,6 +102,7 @@ const AllPetsPage = () => {
         
         console.log('Fetched pets:', petsWithGender);
         setPets(petsWithGender);
+        setFilteredPets(petsWithGender); // Use server-side filtering
         setLoading(false);
       } catch (error) {
         console.error('Error fetching pets:', error);
@@ -73,55 +112,17 @@ const AllPetsPage = () => {
     };
     
     fetchPets();
-  }, [searchQuery]);
+  }, [searchQuery, filters]);
 
   useEffect(() => {
-    // Apply filters and calculate pagination
-    let filtered = [...pets];
-
-    // Apply search query
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(pet =>
-        pet.name.toLowerCase().includes(query) ||
-        pet.breed.toLowerCase().includes(query) ||
-        pet.location.toLowerCase().includes(query) ||
-        (pet.description && pet.description.toLowerCase().includes(query))
-      );
-    }
-
-    // Apply filters
-    if (filters.type) {
-      filtered = filtered.filter(pet => pet.type === filters.type);
-    }
-    if (filters.breed) {
-      filtered = filtered.filter(pet => pet.breed === filters.breed);
-    }
-    if (filters.age) {
-      filtered = filtered.filter(pet => {
-        if (filters.age === 'Under 1') return pet.age < 1;
-        if (filters.age === '1-3') return pet.age >= 1 && pet.age <= 3;
-        if (filters.age === '4-7') return pet.age >= 4 && pet.age <= 7;
-        if (filters.age === '8+') return pet.age >= 8;
-        return true;
-      });
-    }
-    if (filters.gender) {
-      filtered = filtered.filter(pet => pet.gender === filters.gender);
-    }
-    if (filters.location) {
-      filtered = filtered.filter(pet => pet.location.includes(filters.location));
-    }
-    
+    // With server-side filtering, we just need to handle pagination
     // Calculate total pages
-    setTotalPages(Math.ceil(filtered.length / petsPerPage));
+    setTotalPages(Math.ceil(pets.length / petsPerPage));
     
     // Adjust currentPage if it's out of bounds
-    if (currentPage > Math.ceil(filtered.length / petsPerPage) && filtered.length > 0) {
+    if (currentPage > Math.ceil(pets.length / petsPerPage) && pets.length > 0) {
       setCurrentPage(1);
     }
-    
-    setFilteredPets(filtered);
     
     // Update URL with query parameters
     const newParams = new URLSearchParams();
@@ -129,12 +130,14 @@ const AllPetsPage = () => {
     if (filters.type) newParams.set('type', filters.type);
     if (filters.breed) newParams.set('breed', filters.breed);
     if (filters.location) newParams.set('location', filters.location);
+    if (filters.gender) newParams.set('gender', filters.gender);
+    if (filters.age) newParams.set('age', filters.age);
     if (currentPage > 1) newParams.set('page', currentPage.toString());
     
     const newUrl = `${location.pathname}${newParams.toString() ? `?${newParams.toString()}` : ''}`;
     navigate(newUrl, { replace: true });
     
-  }, [filters, searchQuery, pets, currentPage, petsPerPage, navigate, location.pathname]);
+  }, [pets, currentPage, petsPerPage, navigate, location.pathname, searchQuery, filters]);
 
   const handleFilterChange = (e) => {
     const { name, value } = e.target;

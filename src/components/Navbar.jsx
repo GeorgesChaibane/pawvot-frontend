@@ -57,16 +57,39 @@ const Navbar = ({ onSearch }) => {
         try {
             setIsSearching(true);
             
-            // Use the advanced search service
+            // Lebanese locations that should redirect to pets page
+            const petLocations = [
+                'beirut', 'tripoli', 'sidon', 'tyre', 'jounieh', 'byblos', 'baalbek', 
+                'zahle', 'aley', 'nabatieh', 'ashrafieh', 'dekwaneh', 'baabda'
+            ];
+            
+            // Check if the search query includes a location
+            const searchLower = searchQuery.toLowerCase();
+            const isLocationSearch = petLocations.some(location => 
+                searchLower.includes(location.toLowerCase())
+            );
+            
+            // If it's a location, prioritize pets page
+            if (isLocationSearch) {
+                console.log(`Location detected in search: redirecting to pets page`);
+                navigate(`/pets?search=${encodeURIComponent(searchQuery)}`);
+                setSearchQuery('');
+                closeMenu();
+                setIsSearching(false);
+                return;
+            }
+            
+            // For other searches, use the advanced search service
             const results = await SearchService.search(searchQuery);
             
             // Navigate based on search response type
-            if (results.responseType === 'pets') {
+            if (results && results.responseType === 'pets') {
                 navigate(`/pets?search=${encodeURIComponent(searchQuery)}`);
-            } else if (results.responseType === 'products') {
+            } else if (results && results.responseType === 'products') {
                 navigate(`/products?search=${encodeURIComponent(searchQuery)}`);
             } else {
-                // Mixed results - favor products as default
+                // Mixed results or error - favor products as default
+                console.log('Using default search path (products) for query:', searchQuery);
                 navigate(`/products?search=${encodeURIComponent(searchQuery)}`);
             }
             
@@ -122,7 +145,14 @@ const Navbar = ({ onSearch }) => {
                 </div>
                 
                 <div className="nav-auth-container">
-                    <div className={`nav-container ${isMenuOpen ? 'active' : ''}`}>
+                    <div className={`nav-container ${isMenuOpen ? 'active' : ''}`}>                        
+                        {/* Sidebar header with user name */}
+                        {currentUser && (
+                            <div className="sidebar-header">
+                                <div className="sidebar-user-name">{currentUser.name}</div>
+                            </div>
+                        )}
+                        
                         <nav>
                             <ul>
                                 <li><Link to="/pets" onClick={closeMenu}>Adopt</Link></li>
@@ -154,23 +184,15 @@ const Navbar = ({ onSearch }) => {
                                         )}
                                     </Link>
                                 </li>
-                                {isMobile && (
+                                {isMobile && currentUser && (
+                                    <li>
+                                        <button onClick={handleLogout} className="logout-link">Logout</button>
+                                    </li>
+                                )}
+                                {isMobile && !currentUser && (
                                     <>
-                                        {!currentUser ? (
-                                            <>
-                                                <li><Link to="/signup" onClick={closeMenu}>Signup</Link></li>
-                                                <li><Link to="/login" onClick={closeMenu}>Login</Link></li>
-                                            </>
-                                        ) : (
-                                            <>
-                                                <li>
-                                                    <span className="user-name">{currentUser.name}</span>
-                                                </li>
-                                                <li>
-                                                    <button onClick={handleLogout} className="logout-link">Logout</button>
-                                                </li>
-                                            </>
-                                        )}
+                                        <li><Link to="/signup" onClick={closeMenu}>Signup</Link></li>
+                                        <li><Link to="/login" onClick={closeMenu}>Login</Link></li>
                                     </>
                                 )}
                             </ul>
